@@ -13,4 +13,5 @@ export const configValidationSchema = z.object({
   ACCESS_TOKEN_SECRET: z.string().nonempty(),
   ACCESS_TOKEN_DURATION: z.string().nonempty(),
   REFRESH_TOKEN_DURATION: z.string().nonempty(),
+  FRONTEND_URL: z.string().nonempty(),
 })
