@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: pdf-to-speech-dev-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pdf-to-speech-dev
+    volumes:
+      - pdf-to-speech-dev-data:/var/lib/postgresql/data
+
+volumes:
+  pdf-to-speech-dev-data:

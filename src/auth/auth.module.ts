@@ -20,9 +20,9 @@ import { UsersModule } from 'src/users/users.module'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          secret: configService.getOrThrow('JWT_SECRET'),
+          secret: configService.getOrThrow('ACCESS_TOKEN_SECRET'),
           signOptions: {
-            expiresIn: 5 * 60,
+            expiresIn: configService.getOrThrow('ACCESS_TOKEN_DURATION'),
           },
         }
       },

@@ -9,8 +9,11 @@ export class User {
   @Column({ unique: true })
   email: string
 
+  @Column()
+  username: string
+
   @Column({ unique: true, nullable: true })
-  googleId: string
+  googleId: string | null
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user, {
     eager: false,
