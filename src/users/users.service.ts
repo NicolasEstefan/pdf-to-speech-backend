@@ -23,4 +23,12 @@ export class UsersService {
       googleId: id,
     })
   }
+
+  async findById(id: string): Promise<User | null> {
+    return await this.usersRepository.findOne({
+      where: {
+        id,
+      },
+    })
+  }
 }

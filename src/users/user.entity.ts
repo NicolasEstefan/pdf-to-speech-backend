@@ -12,7 +12,7 @@ export class User {
   @Column()
   username: string
 
-  @Column({ unique: true, nullable: true })
+  @Column({ unique: true, nullable: true, type: 'text' })
   googleId: string | null
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user, {

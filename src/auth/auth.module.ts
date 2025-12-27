@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { GoogleStrategy } from './google.strategy'
 import { RefreshToken } from './refresh-token.entity'
 import { UsersModule } from 'src/users/users.module'
+import { JwtStrategy } from './jwt.strategy'
 
 @Module({
   imports: [
@@ -22,13 +23,16 @@ import { UsersModule } from 'src/users/users.module'
         return {
           secret: configService.getOrThrow('ACCESS_TOKEN_SECRET'),
           signOptions: {
-            expiresIn: configService.getOrThrow('ACCESS_TOKEN_DURATION'),
+            expiresIn: Number(
+              configService.getOrThrow('ACCESS_TOKEN_DURATION'),
+            ),
           },
         }
       },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}
