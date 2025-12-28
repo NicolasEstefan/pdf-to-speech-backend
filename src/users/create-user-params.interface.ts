@@ -1,4 +1,4 @@
-export class CreateUserDto {
+export interface CreateUserParams {
   email: string
   username: string
   googleId?: string
