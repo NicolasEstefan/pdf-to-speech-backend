@@ -5,6 +5,15 @@ import { ExtractJwt, Strategy } from 'passport-jwt'
 import { User } from '../users/user.entity'
 import { UsersService } from '../users/users.service'
 import { JwtPayload } from './jwt-payload.interface'
+import { Request } from 'express'
+
+const extractAccessToken = (req: Request): string | null => {
+  if (!req.cookies) {
+    return null
+  }
+
+  return (req.cookies.access_token as string) ?? null
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([extractAccessToken]),
       secretOrKey: configService.getOrThrow('ACCESS_TOKEN_SECRET'),
     })
   }

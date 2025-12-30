@@ -19,6 +19,15 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import dayjs from 'dayjs'
 import { refreshTokensFactory } from '../../test/factories/refresh-tokens.factory'
 import { UnauthorizedException } from '@nestjs/common'
+import { DataSource, FindOneOptions } from 'typeorm'
+import {
+  DataSourceMock,
+  dataSourceMock,
+} from '../../test/mocks/datasource.mock'
+import {
+  entityManagerMock,
+  EntityManagerMock,
+} from '../../test/mocks/entity-manager.mock'
 
 const usersServiceMock = () => ({
   findByGoogleId: jest.fn(),
@@ -36,9 +45,13 @@ describe('AuthService', () => {
   let configService: ConfigServiceMock
   let usersService: ReturnType<typeof usersServiceMock>
   let jwtService: ReturnType<typeof jwtServiceMock>
-  let refreshTokenRepository: RepositoryMock
+  let refreshTokensRepository: RepositoryMock
+  let entityManager: EntityManagerMock
+  let dataSource: DataSourceMock
 
   beforeEach(async () => {
+    entityManager = entityManagerMock()
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -58,13 +71,18 @@ describe('AuthService', () => {
           provide: getRepositoryToken(RefreshToken),
           useFactory: repositoryMock,
         },
+        {
+          provide: DataSource,
+          useValue: dataSourceMock(entityManager),
+        },
       ],
     }).compile()
 
     configService = module.get(ConfigService)
     usersService = module.get(UsersService)
     jwtService = module.get(JwtService)
-    refreshTokenRepository = module.get(getRepositoryToken(RefreshToken))
+    refreshTokensRepository = module.get(getRepositoryToken(RefreshToken))
+    dataSource = module.get(DataSource)
 
     configService.getOrThrow.mockImplementation((key: string) => {
       if (key === 'REFRESH_TOKEN_DURATION') {
@@ -87,7 +105,7 @@ describe('AuthService', () => {
       mockProfile = profilesFactory.build()
       mockRefreshToken = refreshTokensFactory.build({ user: mockUser })
 
-      refreshTokenRepository.create.mockReturnValue(mockRefreshToken)
+      refreshTokensRepository.create.mockReturnValue(mockRefreshToken)
       jwtService.signAsync.mockResolvedValue(mockAccessToken)
     })
 
@@ -104,8 +122,8 @@ describe('AuthService', () => {
       it('should create and return both tokens', async () => {
         const result = await authService.signInWithGoogle(mockProfile)
 
-        expect(refreshTokenRepository.create).toHaveBeenCalledTimes(1)
-        const refreshTokenCreationParams = refreshTokenRepository.create.mock
+        expect(refreshTokensRepository.create).toHaveBeenCalledTimes(1)
+        const refreshTokenCreationParams = refreshTokensRepository.create.mock
           .lastCall as RefreshToken[]
 
         expect(
@@ -119,10 +137,15 @@ describe('AuthService', () => {
           ),
         ).toBeLessThan(1000)
 
-        expect(refreshTokenRepository.save).toHaveBeenCalledTimes(1)
-        expect(refreshTokenRepository.save).toHaveBeenCalledWith(
+        expect(refreshTokensRepository.save).toHaveBeenCalledTimes(1)
+        expect(refreshTokensRepository.save).toHaveBeenCalledWith(
           mockRefreshToken,
         )
+
+        expect(jwtService.signAsync).toHaveBeenCalledTimes(1)
+        expect(jwtService.signAsync).toHaveBeenCalledWith({
+          userId: mockUser.id,
+        })
 
         expect(result).toEqual({
           refreshToken: mockRefreshToken,
@@ -136,8 +159,8 @@ describe('AuthService', () => {
           UnauthorizedException,
         )
 
-        expect(refreshTokenRepository.create).not.toHaveBeenCalled()
-        expect(refreshTokenRepository.save).not.toHaveBeenCalled()
+        expect(refreshTokensRepository.create).not.toHaveBeenCalled()
+        expect(refreshTokensRepository.save).not.toHaveBeenCalled()
       })
     })
 
@@ -161,8 +184,8 @@ describe('AuthService', () => {
       it('should create and return tokens', async () => {
         const result = await authService.signInWithGoogle(mockProfile)
 
-        expect(refreshTokenRepository.create).toHaveBeenCalledTimes(1)
-        const refreshTokenCreationParams = refreshTokenRepository.create.mock
+        expect(refreshTokensRepository.create).toHaveBeenCalledTimes(1)
+        const refreshTokenCreationParams = refreshTokensRepository.create.mock
           .lastCall as RefreshToken[]
 
         expect(
@@ -176,8 +199,8 @@ describe('AuthService', () => {
           ),
         ).toBeLessThan(1000)
 
-        expect(refreshTokenRepository.save).toHaveBeenCalledTimes(1)
-        expect(refreshTokenRepository.save).toHaveBeenCalledWith(
+        expect(refreshTokensRepository.save).toHaveBeenCalledTimes(1)
+        expect(refreshTokensRepository.save).toHaveBeenCalledWith(
           mockRefreshToken,
         )
 
@@ -193,9 +216,160 @@ describe('AuthService', () => {
           UnauthorizedException,
         )
 
-        expect(refreshTokenRepository.create).not.toHaveBeenCalled()
-        expect(refreshTokenRepository.save).not.toHaveBeenCalled()
+        expect(refreshTokensRepository.create).not.toHaveBeenCalled()
+        expect(refreshTokensRepository.save).not.toHaveBeenCalled()
         expect(usersService.create).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('refreshTokens', () => {
+    let mockUser: User
+    let mockRefreshToken: RefreshToken
+    let mockAccessToken: string
+
+    beforeEach(() => {
+      mockUser = usersFactory.build()
+      mockRefreshToken = refreshTokensFactory.build({
+        user: mockUser,
+        expiresAt: dayjs()
+          .add(MOCK_REFRESH_TOKEN_DURATION, 'seconds')
+          .toISOString(),
+      })
+      mockAccessToken = faker.internet.jwt()
+      refreshTokensRepository.findOne.mockReturnValue(mockRefreshToken)
+      jwtService.signAsync.mockReturnValue(mockAccessToken)
+    })
+
+    it('should generate and return an access token for the user correctly', async () => {
+      const result = await authService.refreshToken(mockRefreshToken.token)
+      expect(result.accessToken).toEqual(mockAccessToken)
+      expect(jwtService.signAsync).toHaveBeenCalledTimes(1)
+      expect(jwtService.signAsync).toHaveBeenCalledWith({
+        userId: mockUser.id,
+      })
+    })
+
+    it('should not create a new refresh token for the user', async () => {
+      await authService.refreshToken(mockRefreshToken.token)
+      expect(refreshTokensRepository.create).not.toHaveBeenCalled()
+      expect(refreshTokensRepository.save).not.toHaveBeenCalled()
+    })
+
+    it('should call refreshTokenRepository.findOne with the correct parameters', async () => {
+      await authService.refreshToken(mockRefreshToken.token)
+      expect(refreshTokensRepository.findOne).toHaveBeenCalledTimes(1)
+      const findOneParams = refreshTokensRepository.findOne.mock
+        .lastCall as FindOneOptions<RefreshToken>[]
+      expect(findOneParams[0]).toEqual({
+        where: {
+          token: mockRefreshToken.token,
+        },
+        relations: {
+          user: true,
+        },
+      })
+    })
+
+    describe('when refresh token is not found', () => {
+      beforeEach(() => {
+        refreshTokensRepository.findOne.mockReturnValue(null)
+      })
+
+      it('should throw UnauthorizedException', async () => {
+        await expect(
+          authService.refreshToken('some random string'),
+        ).rejects.toThrow(UnauthorizedException)
+      })
+
+      it('should not create a new refresh token for the user', async () => {
+        try {
+          await authService.refreshToken(mockRefreshToken.token)
+          fail()
+        } catch {
+          expect(refreshTokensRepository.create).not.toHaveBeenCalled()
+          expect(refreshTokensRepository.save).not.toHaveBeenCalled()
+        }
+      })
+    })
+
+    describe('when refresh token is expired', () => {
+      beforeEach(() => {
+        mockRefreshToken.expiresAt = dayjs().subtract(1, 'day').toISOString()
+      })
+
+      it('should throw UnauthorizedException', async () => {
+        await expect(
+          authService.refreshToken(mockRefreshToken.token),
+        ).rejects.toThrow(UnauthorizedException)
+      })
+
+      it('should not create a new refresh token for the user', async () => {
+        try {
+          await authService.refreshToken(mockRefreshToken.token)
+          fail()
+        } catch {
+          expect(refreshTokensRepository.create).not.toHaveBeenCalled()
+          expect(refreshTokensRepository.save).not.toHaveBeenCalled()
+        }
+      })
+    })
+
+    describe('when refresh token is about to expire', () => {
+      let mockNewRefreshToken: RefreshToken
+
+      beforeEach(() => {
+        mockRefreshToken.expiresAt = dayjs()
+          .add(MOCK_REFRESH_TOKEN_DURATION / 2 - 1, 'seconds')
+          .toISOString()
+        mockNewRefreshToken = refreshTokensFactory.build({
+          user: mockUser,
+          expiresAt: dayjs()
+            .add(MOCK_REFRESH_TOKEN_DURATION, 'seconds')
+            .toISOString(),
+        })
+        refreshTokensRepository.create.mockReturnValue(mockNewRefreshToken)
+        entityManager.getRepository.mockReturnValue(refreshTokensRepository)
+      })
+
+      it('should create a new refresh token for the user', async () => {
+        const result = await authService.refreshToken(mockRefreshToken.token)
+        expect(result.refreshToken).toEqual(mockNewRefreshToken)
+        expect(refreshTokensRepository.create).toHaveBeenCalledTimes(1)
+        const refreshTokenCreationParams = refreshTokensRepository.create.mock
+          .lastCall as RefreshToken[]
+
+        expect(
+          refreshTokenCreationParams[0].token.length,
+        ).toBeGreaterThanOrEqual(32)
+        expect(refreshTokenCreationParams[0].user).toEqual(mockUser)
+        expect(
+          dayjs(refreshTokenCreationParams[0].expiresAt).diff(
+            dayjs().add(MOCK_REFRESH_TOKEN_DURATION, 'seconds'),
+            'ms',
+          ),
+        ).toBeLessThan(1000)
+
+        expect(refreshTokensRepository.save).toHaveBeenCalledTimes(1)
+        expect(refreshTokensRepository.save).toHaveBeenCalledWith(
+          mockNewRefreshToken,
+        )
+      })
+
+      it('should delete the old refresh token', async () => {
+        await authService.refreshToken(mockRefreshToken.token)
+
+        expect(refreshTokensRepository.delete).toHaveBeenCalledTimes(1)
+        expect(refreshTokensRepository.delete).toHaveBeenCalledWith(
+          mockRefreshToken,
+        )
+      })
+
+      it('should use a transaction', async () => {
+        await authService.refreshToken(mockRefreshToken.token)
+
+        expect(dataSource.transaction).toHaveBeenCalledTimes(1)
+        expect(entityManager.getRepository).toHaveBeenCalledTimes(1)
       })
     })
   })
