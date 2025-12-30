@@ -1,17 +1,16 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { Profile } from 'passport-google-oauth20'
-import { DataSource, Repository } from 'typeorm'
 import crypto from 'crypto'
 import { LoginResult } from './login-result.interface'
 import { UsersService } from '../users/users.service'
 import { RefreshToken } from './refresh-token.entity'
-import { InjectRepository } from '@nestjs/typeorm'
 import dayjs from 'dayjs'
 import { User } from 'src/users/user.entity'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { JwtPayload } from './jwt-payload.interface'
 import { RefreshTokenResult } from './refresh-token-result.interface'
+import { RefreshTokensRepository } from './refresh-tokens.repository'
 
 @Injectable()
 export class AuthService {
@@ -19,9 +18,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    @InjectRepository(RefreshToken)
-    private readonly refreshTokensRepository: Repository<RefreshToken>,
-    private readonly dataSource: DataSource,
+    private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
   async signInWithGoogle(profile: Profile): Promise<LoginResult> {
@@ -40,7 +37,8 @@ export class AuthService {
       })
     }
 
-    const refreshToken = await this.createRefreshToken(user)
+    const refreshToken = this.generateRefreshToken(user)
+    await this.refreshTokensRepository.save(refreshToken)
     const accessToken = await this.generateAccessToken(user)
 
     return {
@@ -78,16 +76,12 @@ export class AuthService {
       dayjs(),
       'seconds',
     )
-
     if (remainingDuration < refreshTokenDuration / 2) {
-      await this.dataSource.transaction(async (manager) => {
-        const tsxRefreshTokenRepository = manager.getRepository(RefreshToken)
-        newRefreshToken = await this.createRefreshToken(
-          savedRefreshToken.user,
-          tsxRefreshTokenRepository,
-        )
-        await tsxRefreshTokenRepository.delete(savedRefreshToken)
-      })
+      newRefreshToken = this.generateRefreshToken(savedRefreshToken.user)
+      await this.refreshTokensRepository.replaceRefreshToken(
+        savedRefreshToken,
+        newRefreshToken,
+      )
     }
 
     return {
@@ -96,21 +90,14 @@ export class AuthService {
     }
   }
 
-  private async createRefreshToken(
-    user: User,
-    tsxRefreshTokensRepository?: Repository<RefreshToken>,
-  ): Promise<RefreshToken> {
-    const refreshTokensRepository =
-      tsxRefreshTokensRepository || this.refreshTokensRepository
-
-    const refreshToken = refreshTokensRepository.create({
+  private generateRefreshToken(user: User): RefreshToken {
+    const refreshToken = this.refreshTokensRepository.create({
       token: crypto.randomBytes(64).toString('base64url'),
       expiresAt: dayjs()
         .add(this.configService.getOrThrow('REFRESH_TOKEN_DURATION'), 'seconds')
         .toISOString(),
       user,
     })
-    await refreshTokensRepository.save(refreshToken)
     return refreshToken
   }
 

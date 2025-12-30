@@ -9,6 +9,7 @@ import { GoogleStrategy } from './google.strategy'
 import { RefreshToken } from './refresh-token.entity'
 import { UsersModule } from 'src/users/users.module'
 import { JwtStrategy } from './jwt.strategy'
+import { RefreshTokensRepository } from './refresh-tokens.repository'
 
 @Module({
   imports: [
@@ -32,7 +33,12 @@ import { JwtStrategy } from './jwt.strategy'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    GoogleStrategy,
+    JwtStrategy,
+    RefreshTokensRepository,
+  ],
   exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}

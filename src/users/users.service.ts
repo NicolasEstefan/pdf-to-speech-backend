@@ -1,21 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
 import { User } from './user.entity'
-import { Repository } from 'typeorm'
 import { CreateUserParams } from './create-user-params.interface'
+import { UsersRepository } from './users.repository'
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-  ) {}
+  constructor(private usersRepository: UsersRepository) {}
 
   async create(createUserParams: CreateUserParams): Promise<User> {
-    const newUser = this.usersRepository.create(createUserParams)
-    await this.usersRepository.save(newUser)
-
-    return newUser
+    return await this.usersRepository.createUser(createUserParams)
   }
 
   async findByGoogleId(id: string): Promise<User | null> {
