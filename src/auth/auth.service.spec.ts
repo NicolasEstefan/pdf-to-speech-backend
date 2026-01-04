@@ -343,4 +343,21 @@ describe('AuthService', () => {
       })
     })
   })
+
+  describe('deleteRefreshToken', () => {
+    let refreshToken: RefreshToken
+
+    beforeEach(() => {
+      refreshToken = refreshTokensFactory.build()
+    })
+
+    it('should delete the refresh token', async () => {
+      await authService.deleteRefreshToken(refreshToken.token)
+
+      expect(refreshTokensRepository.delete).toHaveBeenCalledTimes(1)
+      expect(refreshTokensRepository.delete).toHaveBeenCalledWith({
+        token: refreshToken.token,
+      })
+    })
+  })
 })

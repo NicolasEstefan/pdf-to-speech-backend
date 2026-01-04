@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   HttpStatus,
   HttpCode,
+  Post,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import type { Request, Response } from 'express'
@@ -47,7 +48,7 @@ export class AuthController {
     res.redirect(this.configService.getOrThrow('FRONTEND_URL'))
   }
 
-  @Get('/refresh')
+  @Post('/refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Req() req: Request,
@@ -71,6 +72,20 @@ export class AuthController {
         refreshResult.refreshToken.expiresAt,
       )
     }
+  }
+
+  @Post('/logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard())
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    if (req.cookies.refresh_token) {
+      await this.authService.deleteRefreshToken(
+        req.cookies.refresh_token as string,
+      )
+    }
+
+    res.clearCookie('refresh_token')
+    res.clearCookie('access_token')
   }
 
   private setCookie(

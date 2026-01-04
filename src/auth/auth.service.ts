@@ -90,6 +90,12 @@ export class AuthService {
     }
   }
 
+  async deleteRefreshToken(refreshToken: string) {
+    await this.refreshTokensRepository.delete({
+      token: refreshToken,
+    })
+  }
+
   private generateRefreshToken(user: User): RefreshToken {
     const refreshToken = this.refreshTokensRepository.create({
       token: crypto.randomBytes(64).toString('base64url'),
