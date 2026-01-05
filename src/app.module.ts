@@ -4,6 +4,7 @@ import { configValidationSchema } from './config.schema'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
+import { GenerationsModule } from './generations/generations.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module'
     }),
     AuthModule,
     UsersModule,
+    GenerationsModule,
   ],
   controllers: [],
   providers: [],
