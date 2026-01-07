@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
 import { GenerationsModule } from './generations/generations.module'
+import { ExternalServicesModule } from './external-services/external-services.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { GenerationsModule } from './generations/generations.module'
     AuthModule,
     UsersModule,
     GenerationsModule,
+    ExternalServicesModule,
   ],
   controllers: [],
   providers: [],

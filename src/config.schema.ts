@@ -16,4 +16,6 @@ export const configValidationSchema = z.object({
   FRONTEND_URL: z.string().nonempty(),
   PDFS_PATH: z.string().nonempty(),
   TXTS_PATH: z.string().nonempty(),
+  OPENAI_API_KEY: z.string().nonempty(),
+  LLM_MODEL: z.string().default('gpt-4.1'),
 })
