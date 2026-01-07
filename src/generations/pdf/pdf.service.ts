@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { exec } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { Language } from './language.enum'
 
 @Injectable()
@@ -9,11 +9,12 @@ export class PdfService {
     language: Language,
   ): Promise<string[]> {
     await new Promise((resolve, reject) => {
-      exec(
-        `ocrmypdf -l ${language} --skip-text ${filePath} ${filePath}`,
+      execFile(
+        'ocrmypdf',
+        ['-l', language, '--skip-text', filePath, filePath],
         (error) => {
           if (error) {
-            reject(error)
+            reject(new Error(error.message, { cause: error.cause }))
           } else {
             resolve(filePath)
           }
@@ -22,13 +23,18 @@ export class PdfService {
     })
 
     let text = await new Promise<string>((resolve, reject) => {
-      exec(`pdftotext ${filePath} -`, { encoding: 'utf8' }, (error, stdout) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(stdout)
-        }
-      })
+      execFile(
+        'pdftotext',
+        [filePath, '-'],
+        { encoding: 'utf8' },
+        (error, stdout) => {
+          if (error) {
+            reject(new Error(error.message, { cause: error.cause }))
+          } else {
+            resolve(stdout)
+          }
+        },
+      )
     })
 
     text = text.trim()
