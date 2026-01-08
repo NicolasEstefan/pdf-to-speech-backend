@@ -18,4 +18,5 @@ export const configValidationSchema = z.object({
   TXTS_PATH: z.string().nonempty(),
   OPENAI_API_KEY: z.string().nonempty(),
   LLM_MODEL: z.string().default('gpt-4.1'),
+  GCS_BUCKET_NAME: z.string().nonempty(),
 })
