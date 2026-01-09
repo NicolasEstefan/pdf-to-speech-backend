@@ -7,7 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config'
 
 const downloadMock = jest.fn()
-const fileMock = jest.fn(() => ({ download: downloadMock }))
+const deleteMock = jest.fn(() => ({ catch: jest.fn() }))
+const fileMock = jest.fn(() => ({ download: downloadMock, delete: deleteMock }))
 const bucketMock = jest.fn(() => ({ file: fileMock }))
 
 jest.mock('@google-cloud/storage', () => ({
@@ -58,14 +59,20 @@ describe('GcsService', () => {
     it('should download the correct file to the specified path', async () => {
       await gcsService.downloadFile(TEST_FILE_NAME, TEST_OUTPUT_PATH)
 
-      expect(bucketMock).toHaveBeenCalledTimes(1)
+      expect(bucketMock).toHaveBeenCalledTimes(2)
       expect(bucketMock).toHaveBeenCalledWith(TEST_BUCKET_NAME)
-      expect(fileMock).toHaveBeenCalledTimes(1)
+      expect(fileMock).toHaveBeenCalledTimes(2)
       expect(fileMock).toHaveBeenCalledWith(TEST_FILE_NAME)
       expect(downloadMock).toHaveBeenCalledTimes(1)
       expect(downloadMock).toHaveBeenCalledWith({
         destination: TEST_OUTPUT_PATH,
       })
+    })
+
+    it('should delete the file from GCS', async () => {
+      await gcsService.downloadFile(TEST_FILE_NAME, TEST_OUTPUT_PATH)
+
+      expect(deleteMock).toHaveBeenCalledTimes(1)
     })
   })
 })
