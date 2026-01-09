@@ -23,6 +23,8 @@ describe('GcsService', () => {
   let configService: ConfigServiceMock
 
   beforeEach(async () => {
+    jest.clearAllMocks()
+
     configService = configServiceMock()
     configService.getOrThrow.mockImplementation((key: string) => {
       if (key === 'GCS_BUCKET_NAME') {
