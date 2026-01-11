@@ -106,6 +106,7 @@ export class TtsService {
       fileName,
     )
     await this.gcsService.downloadFile(fileName, localFilePath)
+    await this.gcsService.deleteFilesByPrefix(fileName)
 
     return localFilePath
   }

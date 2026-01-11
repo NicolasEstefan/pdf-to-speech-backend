@@ -20,6 +20,7 @@ jest.mock('axios')
 const gcsServiceMock = () => ({
   getGcsUri: jest.fn(),
   downloadFile: jest.fn(),
+  deleteFilesByPrefix: jest.fn(),
 })
 
 const getAccessTokenMock = jest.fn()
@@ -204,6 +205,21 @@ describe('TtsService', () => {
             'x-goog-user-project': MOCK_GCLOUD_PROJECT_ID,
           },
         })
+      })
+
+      it('should delete audio fragments from gcs', async () => {
+        await ttsService.textToSpeech({
+          id: MOCK_ID,
+          language: MOCK_LANGUAGE,
+          speaker: MOCK_SPEAKER,
+          text: MOCK_TEXT,
+          reportProgressCallback,
+        })
+
+        expect(gcsService.deleteFilesByPrefix).toHaveBeenCalledTimes(1)
+        expect(gcsService.deleteFilesByPrefix).toHaveBeenCalledWith(
+          `${MOCK_ID}.wav`,
+        )
       })
     })
 

@@ -7,9 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config'
 
 const downloadMock = jest.fn()
-const deleteMock = jest.fn(() => ({ catch: jest.fn() }))
-const fileMock = jest.fn(() => ({ download: downloadMock, delete: deleteMock }))
-const bucketMock = jest.fn(() => ({ file: fileMock }))
+const fileMock = jest.fn(() => ({ download: downloadMock }))
+const deleteFilesMock = jest.fn()
+const bucketMock = jest.fn(() => ({
+  file: fileMock,
+  deleteFiles: deleteFilesMock,
+}))
 
 jest.mock('@google-cloud/storage', () => ({
   Storage: jest.fn(() => ({
@@ -59,20 +62,27 @@ describe('GcsService', () => {
     it('should download the correct file to the specified path', async () => {
       await gcsService.downloadFile(TEST_FILE_NAME, TEST_OUTPUT_PATH)
 
-      expect(bucketMock).toHaveBeenCalledTimes(2)
+      expect(bucketMock).toHaveBeenCalledTimes(1)
       expect(bucketMock).toHaveBeenCalledWith(TEST_BUCKET_NAME)
-      expect(fileMock).toHaveBeenCalledTimes(2)
+      expect(fileMock).toHaveBeenCalledTimes(1)
       expect(fileMock).toHaveBeenCalledWith(TEST_FILE_NAME)
       expect(downloadMock).toHaveBeenCalledTimes(1)
       expect(downloadMock).toHaveBeenCalledWith({
         destination: TEST_OUTPUT_PATH,
       })
     })
+  })
 
-    it('should delete the file from GCS', async () => {
-      await gcsService.downloadFile(TEST_FILE_NAME, TEST_OUTPUT_PATH)
+  describe('deleteFilesByPrefix', () => {
+    const TEST_PREFIX = 'test.wav'
 
-      expect(deleteMock).toHaveBeenCalledTimes(1)
+    it('should call deleteFiles with the provided prefix', async () => {
+      await gcsService.deleteFilesByPrefix(TEST_PREFIX)
+
+      expect(bucketMock).toHaveBeenCalledTimes(1)
+      expect(bucketMock).toHaveBeenCalledWith(TEST_BUCKET_NAME)
+      expect(deleteFilesMock).toHaveBeenCalledTimes(1)
+      expect(deleteFilesMock).toHaveBeenCalledWith({ prefix: TEST_PREFIX })
     })
   })
 })
