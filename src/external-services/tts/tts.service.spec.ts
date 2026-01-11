@@ -10,7 +10,6 @@ import { faker } from '@faker-js/faker'
 import { Language } from './language.enum'
 import { Speaker } from './speaker.enum'
 import axios from 'axios'
-import path from 'node:path'
 import { AuthFailedException } from './exeptions/auth-failed.exception'
 import { TimeoutException } from './exeptions/timeout.exception'
 import { TtsFailedException } from './exeptions/tts-failed.exception'
@@ -138,7 +137,7 @@ describe('TtsService', () => {
         expect(reportProgressCallback).toHaveBeenCalledWith(100)
       })
 
-      it("should return the correct output file's path", async () => {
+      it("should return the correct output file's name", async () => {
         const result = await ttsService.textToSpeech({
           id: MOCK_ID,
           language: MOCK_LANGUAGE,
@@ -147,7 +146,7 @@ describe('TtsService', () => {
           reportProgressCallback,
         })
 
-        expect(result).toEqual(path.join(MOCK_AUDIOS_PATH, `${MOCK_ID}.wav`))
+        expect(result).toEqual(`${MOCK_ID}.wav`)
       })
 
       it('should make a request to google tts service with the correct params', async () => {
@@ -205,21 +204,6 @@ describe('TtsService', () => {
             'x-goog-user-project': MOCK_GCLOUD_PROJECT_ID,
           },
         })
-      })
-
-      it('should delete audio fragments from gcs', async () => {
-        await ttsService.textToSpeech({
-          id: MOCK_ID,
-          language: MOCK_LANGUAGE,
-          speaker: MOCK_SPEAKER,
-          text: MOCK_TEXT,
-          reportProgressCallback,
-        })
-
-        expect(gcsService.deleteFilesByPrefix).toHaveBeenCalledTimes(1)
-        expect(gcsService.deleteFilesByPrefix).toHaveBeenCalledWith(
-          `${MOCK_ID}.wav`,
-        )
       })
     })
 

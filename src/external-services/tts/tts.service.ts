@@ -7,12 +7,11 @@ import { AuthFailedException } from './exeptions/auth-failed.exception'
 import { GoogleTtsRequest } from './google-tts-request.interface'
 import { TtsParams } from './tts-params.interface'
 import { GoogleTtsResponse } from './google-tts-response.interface'
-import { FailedToInitializeException } from './exeptions/failet-to-initialize.exception'
+import { InitializationFailedException } from './exeptions/initialization-failed.exception'
 import dayjs from 'dayjs'
 import { GoogleTtsProgressResponse } from './google-tts-progress-response.interface'
 import { TtsFailedException } from './exeptions/tts-failed.exception'
 import { TimeoutException } from './exeptions/timeout.exception'
-import path from 'node:path'
 
 @Injectable()
 export class TtsService {
@@ -39,8 +38,8 @@ export class TtsService {
       throw new AuthFailedException()
     }
 
-    const fileName = `${id}.wav`
-    const outputGcsUri = this.gcsService.getGcsUri(fileName)
+    const audioFileName = `${id}.wav`
+    const outputGcsUri = this.gcsService.getGcsUri(audioFileName)
     const requestBody: GoogleTtsRequest = {
       input: {
         text,
@@ -65,7 +64,7 @@ export class TtsService {
     )
 
     if (response.data.error) {
-      throw new FailedToInitializeException(response.data.error)
+      throw new InitializationFailedException(response.data.error)
     }
 
     const startTime = dayjs()
@@ -101,14 +100,7 @@ export class TtsService {
       throw new TimeoutException(dayjs().diff(startTime, 'seconds'))
     }
 
-    const localFilePath = path.join(
-      this.configService.getOrThrow('AUDIOS_PATH'),
-      fileName,
-    )
-    await this.gcsService.downloadFile(fileName, localFilePath)
-    await this.gcsService.deleteFilesByPrefix(fileName)
-
-    return localFilePath
+    return audioFileName
   }
 
   private async getAccessToken() {

@@ -11,5 +11,15 @@ services:
     volumes:
       - pdf-to-speech-dev-data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-to-speech-dev-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - pdf-to-speech-redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   pdf-to-speech-dev-data:
+  pdf-to-speech-redis-data:

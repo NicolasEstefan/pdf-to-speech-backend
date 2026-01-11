@@ -7,5 +7,6 @@ import { TtsService } from './tts/tts.service'
 @Module({
   imports: [ConfigModule],
   providers: [LlmService, GcsService, TtsService],
+  exports: [LlmService, GcsService, TtsService],
 })
 export class ExternalServicesModule {}

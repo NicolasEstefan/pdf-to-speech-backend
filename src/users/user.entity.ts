@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { RefreshToken } from '../auth/refresh-token.entity'
 import { Exclude } from 'class-transformer'
+import { Generation } from '../generations/generation.entity'
 
 @Entity()
 export class User {
@@ -23,4 +24,9 @@ export class User {
   })
   @Exclude({ toPlainOnly: true })
   refreshTokens: RefreshToken[]
+
+  @OneToMany(() => Generation, (generation) => generation.createdBy, {
+    eager: false,
+  })
+  generations: Generation
 }

@@ -6,12 +6,19 @@ import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
 import { GenerationsModule } from './generations/generations.module'
 import { ExternalServicesModule } from './external-services/external-services.module'
+import { BullModule } from '@nestjs/bullmq'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: [`.env.${process.env.NODE_ENV}`],
       validate: (config) => configValidationSchema.parse(config),
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
