@@ -28,5 +28,5 @@ export class User {
   @OneToMany(() => Generation, (generation) => generation.createdBy, {
     eager: false,
   })
-  generations: Generation
+  generations: Generation[]
 }

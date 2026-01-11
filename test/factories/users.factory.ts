@@ -8,4 +8,5 @@ export const usersFactory = Factory.define<User>(() => ({
   googleId: Math.random() < 0.5 ? faker.string.uuid() : null,
   username: faker.internet.username(),
   refreshTokens: [],
+  generations: [],
 }))
