@@ -1,21 +1,18 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
-import { TtsService } from 'src/external-services/tts/tts.service'
+import { TtsService } from '../../external-services/tts/tts.service'
 import { GenerationJobData } from '../generation-job-data.interface'
 import { Logger } from '@nestjs/common'
-import { GenerationsService } from '../generations.service'
 import { TextNormalizationJobResult } from '../text-normalization-job-result.interface'
+import { GENERATION_QUEUE } from '../generations.module'
 
-@Processor('generation', { concurrency: 100 })
+@Processor(GENERATION_QUEUE, { concurrency: 100 })
 export class GenerationWorker extends WorkerHost {
   private readonly logger: Logger = new Logger(GenerationWorker.name, {
     timestamp: true,
   })
 
-  constructor(
-    private readonly ttsService: TtsService,
-    private readonly generationsService: GenerationsService,
-  ) {
+  constructor(private readonly ttsService: TtsService) {
     super()
   }
 
@@ -37,7 +34,6 @@ export class GenerationWorker extends WorkerHost {
         job.data.generationId,
       ) as (progress: number) => void,
     })
-
     return audioFileName
   }
 

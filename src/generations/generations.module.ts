@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { PdfService } from './pdf/pdf.service'
-import { ExternalServicesModule } from 'src/external-services/external-services.module'
+import { ExternalServicesModule } from '../external-services/external-services.module'
 import { BullModule } from '@nestjs/bullmq'
 import { GenerationsRepository } from './generations.repository'
 import { GenerationsService } from './generations.service'
@@ -13,6 +13,16 @@ import { TextNormalizationWorker } from './workers/text-normalization.worker'
 import { DownloadWorker } from './workers/download.worker'
 import { ConfigModule } from '@nestjs/config'
 
+export const GENERATION_QUEUE = 'generation'
+export const TEXT_NORMALIZATION_QUEUE = 'text-normalization'
+export const DOWNLOAD_QUEUE = 'download'
+
+export const GENERATE_STEP = 'generate'
+export const NORMALIZE_TEXT_STEP = 'normalize-text'
+export const DOWNLOAD_STEP = 'download'
+
+export const GENERATIONS_FLOW_PRODUCER = 'generations-flow-producer'
+
 @Module({
   imports: [
     ConfigModule,
@@ -20,17 +30,17 @@ import { ConfigModule } from '@nestjs/config'
     TypeOrmModule.forFeature([Generation, Audio]),
     BullModule.registerQueue(
       {
-        name: 'generation',
+        name: GENERATION_QUEUE,
       },
       {
-        name: 'text-normalization',
+        name: TEXT_NORMALIZATION_QUEUE,
       },
       {
-        name: 'download',
+        name: DOWNLOAD_QUEUE,
       },
     ),
     BullModule.registerFlowProducer({
-      name: 'generations-flow-producer',
+      name: GENERATIONS_FLOW_PRODUCER,
     }),
   ],
   providers: [

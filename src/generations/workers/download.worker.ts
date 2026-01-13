@@ -2,12 +2,13 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
 import { Logger } from '@nestjs/common'
 import { GenerationsService } from '../generations.service'
-import { GcsService } from 'src/external-services/gcs/gcs.service'
+import { GcsService } from '../../external-services/gcs/gcs.service'
 import { DownloadJobData } from '../download-job-data.interface'
 import path from 'node:path'
 import { ConfigService } from '@nestjs/config'
+import { DOWNLOAD_QUEUE } from '../generations.module'
 
-@Processor('download', { concurrency: 100 })
+@Processor(DOWNLOAD_QUEUE, { concurrency: 100 })
 export class DownloadWorker extends WorkerHost {
   private readonly logger: Logger = new Logger(DownloadWorker.name, {
     timestamp: true,
@@ -30,7 +31,7 @@ export class DownloadWorker extends WorkerHost {
       fileName,
     )
     await this.gcsService.downloadFile(fileName, localFilePath)
-    await this.gcsService.deleteFilesByPrefix(fileName)
+    await this.gcsService.deleteFilesByPrefix(job.data.generationId)
 
     return localFilePath
   }
@@ -48,7 +49,13 @@ export class DownloadWorker extends WorkerHost {
       `Error while working on audio download for generation ${job.data.generationId}`,
       job.failedReason,
     )
-    await this.generationsService.failGeneration(job.data.generationId)
+    if (
+      job.attemptsMade >= (job.opts.attempts ?? 1) ||
+      job.failedReason.includes('child')
+    ) {
+      await this.generationsService.failGeneration(job.data.generationId)
+      await this.gcsService.deleteFilesByPrefix(job.data.generationId)
+    }
   }
 
   @OnWorkerEvent('completed')

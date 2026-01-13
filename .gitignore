@@ -57,3 +57,5 @@ files/pdfs/*
 !files/pdfs/.gitkeep
 files/txts/*
 !files/txts/.gitkeep
+
+notes.md

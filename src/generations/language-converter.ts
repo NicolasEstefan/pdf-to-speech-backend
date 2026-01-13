@@ -1,20 +1,21 @@
-import { Language as TtsLanguage } from 'src/external-services/tts/language.enum'
+import { Language as TtsLanguage } from '../external-services/tts/language.enum'
 import { Language as PdfLanguage } from './pdf/language.enum'
+import { Language } from './language.enum'
 
-export function pdfLanguageToTtsLanguage(language: PdfLanguage): TtsLanguage {
+export function getTtsLanguage(language: Language): TtsLanguage {
   switch (language) {
-    case PdfLanguage.ENGLISH:
+    case Language.ENGLISH:
       return TtsLanguage.EN_US
-    case PdfLanguage.SPANISH:
+    case Language.SPANISH:
       return TtsLanguage.ES_US
   }
 }
 
-export function ttsLanguageToPdfLanguage(language: TtsLanguage): PdfLanguage {
+export function getPdfLanguage(language: Language): PdfLanguage {
   switch (language) {
-    case TtsLanguage.EN_US:
+    case Language.ENGLISH:
       return PdfLanguage.ENGLISH
-    case TtsLanguage.ES_US:
+    case Language.SPANISH:
       return PdfLanguage.SPANISH
   }
 }

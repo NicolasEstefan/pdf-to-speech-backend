@@ -1,4 +1,4 @@
-import { Language } from '../external-services/tts/language.enum'
+import { Language } from './language.enum'
 
 export interface TextNormalizationJobData {
   generationId: string

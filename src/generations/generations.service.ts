@@ -4,14 +4,23 @@ import { FlowProducer } from 'bullmq'
 import { StartGenerationDto } from './start-generation.dto'
 import { rm, stat } from 'node:fs/promises'
 import { PdfService } from './pdf/pdf.service'
-import { User } from 'src/users/user.entity'
+import { User } from '../users/user.entity'
 import { GenerationsRepository } from './generations.repository'
 import { TextNormalizationJobData } from './text-normalization-job-data.interface'
-import { pdfLanguageToTtsLanguage } from './language-converter'
 import { GenerationJobData } from './generation-job-data.interface'
 import { Generation } from './generation.entity'
 import { GenerationStatus } from './generation-status.enum'
 import { DownloadJobData } from './download-job-data.interface'
+import {
+  DOWNLOAD_QUEUE,
+  DOWNLOAD_STEP,
+  GENERATE_STEP,
+  GENERATION_QUEUE,
+  GENERATIONS_FLOW_PRODUCER,
+  NORMALIZE_TEXT_STEP,
+  TEXT_NORMALIZATION_QUEUE,
+} from './generations.module'
+import { getPdfLanguage, getTtsLanguage } from './language-converter'
 
 @Injectable()
 export class GenerationsService {
@@ -20,7 +29,7 @@ export class GenerationsService {
   })
 
   constructor(
-    @InjectFlowProducer('generations-flow-producer')
+    @InjectFlowProducer(GENERATIONS_FLOW_PRODUCER)
     private readonly generationsFlowProducer: FlowProducer,
     private readonly pdfService: PdfService,
     private readonly generationsRepository: GenerationsRepository,
@@ -33,12 +42,12 @@ export class GenerationsService {
     try {
       const pages = await this.pdfService.extractTextFromPages(
         startGenerationDto.pdfFilePath,
-        startGenerationDto.language,
+        getPdfLanguage(startGenerationDto.language),
       )
 
       const generation = await this.generationsRepository.createGeneration(user)
 
-      const ttsLanguage = pdfLanguageToTtsLanguage(startGenerationDto.language)
+      const ttsLanguage = getTtsLanguage(startGenerationDto.language)
 
       const downloadJobData: DownloadJobData = {
         generationId: generation.id,
@@ -53,15 +62,15 @@ export class GenerationsService {
       const textNormalizationJobsData: TextNormalizationJobData[] = pages.map(
         (page, index) => ({
           generationId: generation.id,
-          language: ttsLanguage,
+          language: startGenerationDto.language,
           text: page,
           pageNumber: index,
         }),
       )
 
       await this.generationsFlowProducer.add({
-        name: 'download',
-        queueName: 'download',
+        name: DOWNLOAD_STEP,
+        queueName: DOWNLOAD_QUEUE,
         opts: {
           attempts: 7,
           backoff: {
@@ -72,17 +81,19 @@ export class GenerationsService {
         data: downloadJobData,
         children: [
           {
-            name: `generate`,
-            queueName: 'generation',
+            name: GENERATE_STEP,
+            queueName: GENERATION_QUEUE,
             opts: {
               attempts: 2,
+              failParentOnFailure: true,
             },
             data: generationJobData,
             children: textNormalizationJobsData.map((data) => ({
-              name: 'normalize-text',
-              queueName: 'text-normalization',
+              name: NORMALIZE_TEXT_STEP,
+              queueName: TEXT_NORMALIZATION_QUEUE,
               opts: {
                 attempts: 3,
+                failParentOnFailure: true,
               },
               data,
             })),

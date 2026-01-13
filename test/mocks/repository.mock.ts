@@ -3,6 +3,7 @@ export const repositoryMock = () => ({
   save: jest.fn(),
   findOne: jest.fn(),
   delete: jest.fn(),
+  update: jest.fn(),
 })
 
 export type RepositoryMock = ReturnType<typeof repositoryMock>

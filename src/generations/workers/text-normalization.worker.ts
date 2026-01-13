@@ -1,11 +1,12 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
-import { LlmService } from 'src/external-services/llm/llm.service'
+import { LlmService } from '../../external-services/llm/llm.service'
 import { TextNormalizationJobData } from '../text-normalization-job-data.interface'
 import { Logger } from '@nestjs/common'
 import { TextNormalizationJobResult } from '../text-normalization-job-result.interface'
+import { TEXT_NORMALIZATION_QUEUE } from '../generations.module'
 
-@Processor('text-normalization', { concurrency: 200 })
+@Processor(TEXT_NORMALIZATION_QUEUE, { concurrency: 200 })
 export class TextNormalizationWorker extends WorkerHost {
   private readonly logger: Logger = new Logger(TextNormalizationWorker.name, {
     timestamp: true,
