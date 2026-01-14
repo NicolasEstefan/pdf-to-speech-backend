@@ -51,7 +51,7 @@ export class DownloadWorker extends WorkerHost {
     )
     if (
       job.attemptsMade >= (job.opts.attempts ?? 1) ||
-      job.failedReason.includes('child')
+      job.failedReason.match(/^child.+failed$/)
     ) {
       await this.generationsService.failGeneration(job.data.generationId)
       await this.gcsService.deleteFilesByPrefix(job.data.generationId)
