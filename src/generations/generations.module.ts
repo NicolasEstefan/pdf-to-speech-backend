@@ -12,16 +12,12 @@ import { GenerationWorker } from './workers/generation.worker'
 import { TextNormalizationWorker } from './workers/text-normalization.worker'
 import { DownloadWorker } from './workers/download.worker'
 import { ConfigModule } from '@nestjs/config'
-
-export const GENERATION_QUEUE = 'generation'
-export const TEXT_NORMALIZATION_QUEUE = 'text-normalization'
-export const DOWNLOAD_QUEUE = 'download'
-
-export const GENERATE_STEP = 'generate'
-export const NORMALIZE_TEXT_STEP = 'normalize-text'
-export const DOWNLOAD_STEP = 'download'
-
-export const GENERATIONS_FLOW_PRODUCER = 'generations-flow-producer'
+import {
+  GENERATION_QUEUE,
+  TEXT_NORMALIZATION_QUEUE,
+  DOWNLOAD_QUEUE,
+  GENERATIONS_FLOW_PRODUCER,
+} from './generations.constants'
 
 @Module({
   imports: [

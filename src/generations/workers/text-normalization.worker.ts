@@ -4,7 +4,7 @@ import { LlmService } from '../../external-services/llm/llm.service'
 import { TextNormalizationJobData } from '../text-normalization-job-data.interface'
 import { Logger } from '@nestjs/common'
 import { TextNormalizationJobResult } from '../text-normalization-job-result.interface'
-import { TEXT_NORMALIZATION_QUEUE } from '../generations.module'
+import { TEXT_NORMALIZATION_QUEUE } from '../generations.constants'
 
 @Processor(TEXT_NORMALIZATION_QUEUE, { concurrency: 200 })
 export class TextNormalizationWorker extends WorkerHost {
@@ -19,7 +19,10 @@ export class TextNormalizationWorker extends WorkerHost {
   async process(
     job: Job<TextNormalizationJobData, TextNormalizationJobResult>,
   ): Promise<TextNormalizationJobResult> {
-    const result = await this.llmService.normalizeTextForTTS(job.data.text)
+    const result = await this.llmService.normalizeTextForTTS(
+      job.data.text,
+      job.data.language,
+    )
     return { text: result, pageNumber: job.data.pageNumber }
   }
 

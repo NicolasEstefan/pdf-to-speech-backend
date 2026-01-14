@@ -19,7 +19,7 @@ import {
   GENERATIONS_FLOW_PRODUCER,
   NORMALIZE_TEXT_STEP,
   TEXT_NORMALIZATION_QUEUE,
-} from './generations.module'
+} from './generations.constants'
 import { getPdfLanguage, getTtsLanguage } from './language-converter'
 
 @Injectable()

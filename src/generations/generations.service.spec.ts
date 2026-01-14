@@ -18,7 +18,7 @@ import {
   GENERATION_QUEUE,
   NORMALIZE_TEXT_STEP,
   TEXT_NORMALIZATION_QUEUE,
-} from './generations.module'
+} from './generations.constants'
 import { GenerationJobData } from './generation-job-data.interface'
 import { DownloadJobData } from './download-job-data.interface'
 import { TextNormalizationJobData } from './text-normalization-job-data.interface'

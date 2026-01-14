@@ -6,7 +6,7 @@ import { GcsService } from '../../external-services/gcs/gcs.service'
 import { DownloadJobData } from '../download-job-data.interface'
 import path from 'node:path'
 import { ConfigService } from '@nestjs/config'
-import { DOWNLOAD_QUEUE } from '../generations.module'
+import { DOWNLOAD_QUEUE } from '../generations.constants'
 
 @Processor(DOWNLOAD_QUEUE, { concurrency: 100 })
 export class DownloadWorker extends WorkerHost {
