@@ -1,6 +1,6 @@
 import { IsEnum } from 'class-validator'
-import { Speaker } from '../external-services/tts/speaker.enum'
-import { Language } from './language.enum'
+import { Speaker } from '../../external-services/tts/types/speaker.enum'
+import { Language } from '../types/language.enum'
 
 export class StartGenerationDto {
   @IsEnum(Language)

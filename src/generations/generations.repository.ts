@@ -1,9 +1,9 @@
 import { DataSource, Repository } from 'typeorm'
 import { Injectable } from '@nestjs/common'
-import { Generation } from './generation.entity'
+import { Generation } from './entities/generation.entity'
 import { User } from '../users/user.entity'
-import { GenerationStatus } from './generation-status.enum'
-import { Audio } from './audio.entity'
+import { GenerationStatus } from './types/generation-status.enum'
+import { Audio } from './entities/audio.entity'
 
 @Injectable()
 export class GenerationsRepository extends Repository<Generation> {

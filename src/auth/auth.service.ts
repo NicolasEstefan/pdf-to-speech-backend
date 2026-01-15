@@ -1,15 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { Profile } from 'passport-google-oauth20'
 import crypto from 'crypto'
-import { LoginResult } from './login-result.interface'
+import { LoginResult } from './types/login-result.interface'
 import { UsersService } from '../users/users.service'
 import { RefreshToken } from './refresh-token.entity'
 import dayjs from 'dayjs'
 import { User } from '../users/user.entity'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
-import { JwtPayload } from './jwt-payload.interface'
-import { RefreshTokenResult } from './refresh-token-result.interface'
+import { JwtPayload } from './types/jwt-payload.interface'
+import { RefreshTokenResult } from './types/refresh-token-result.interface'
 import { RefreshTokensRepository } from './refresh-tokens.repository'
 
 @Injectable()

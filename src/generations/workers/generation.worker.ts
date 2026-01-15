@@ -1,9 +1,9 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
 import { TtsService } from '../../external-services/tts/tts.service'
-import { GenerationJobData } from '../generation-job-data.interface'
+import { GenerationJobData } from '../types/generation-job-data.interface'
 import { Logger } from '@nestjs/common'
-import { TextNormalizationJobResult } from '../text-normalization-job-result.interface'
+import { TextNormalizationJobResult } from '../types/text-normalization-job-result.interface'
 import { GENERATION_QUEUE } from '../generations.constants'
 
 @Processor(GENERATION_QUEUE, { concurrency: 100 })

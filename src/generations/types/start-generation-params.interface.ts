@@ -1,4 +1,4 @@
-import { Speaker } from '../external-services/tts/speaker.enum'
+import { Speaker } from '../../external-services/tts/types/speaker.enum'
 import { Language } from './language.enum'
 
 export class StartGenerationParams {

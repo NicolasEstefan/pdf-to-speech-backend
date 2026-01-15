@@ -1,9 +1,9 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq'
 import { LlmService } from '../../external-services/llm/llm.service'
-import { TextNormalizationJobData } from '../text-normalization-job-data.interface'
+import { TextNormalizationJobData } from '../types/text-normalization-job-data.interface'
 import { Logger } from '@nestjs/common'
-import { TextNormalizationJobResult } from '../text-normalization-job-result.interface'
+import { TextNormalizationJobResult } from '../types/text-normalization-job-result.interface'
 import { TEXT_NORMALIZATION_QUEUE } from '../generations.constants'
 
 @Processor(TEXT_NORMALIZATION_QUEUE, { concurrency: 200 })

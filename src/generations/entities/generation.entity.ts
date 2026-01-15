@@ -5,8 +5,8 @@ import {
   PrimaryGeneratedColumn,
   OneToOne,
 } from 'typeorm'
-import { GenerationStatus } from './generation-status.enum'
-import { User } from '../users/user.entity'
+import { GenerationStatus } from '../types/generation-status.enum'
+import { User } from '../../users/user.entity'
 import { Audio } from './audio.entity'
 
 @Entity()

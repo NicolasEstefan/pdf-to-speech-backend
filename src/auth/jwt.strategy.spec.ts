@@ -8,7 +8,7 @@ import {
   ConfigServiceMock,
   configServiceMock,
 } from '../../test/mocks/config.service.mock'
-import { JwtPayload } from './jwt-payload.interface'
+import { JwtPayload } from './types/jwt-payload.interface'
 import { JwtStrategy } from './jwt.strategy'
 import { UnauthorizedException } from '@nestjs/common'
 

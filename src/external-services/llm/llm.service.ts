@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { OnModuleInit } from '@nestjs/common'
 import OpenAI from 'openai'
-import { Language } from '../../generations/language.enum'
+import { Language } from '../../generations/types/language.enum'
 import { readFile } from 'node:fs/promises'
 
 const TEXT_NORMALIZATION_PROMPT_FILE_PATH = `src/external-services/llm/prompts/normalize_text.:language.txt`

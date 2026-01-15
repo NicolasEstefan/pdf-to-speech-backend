@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { RefreshToken } from '../auth/refresh-token.entity'
 import { Exclude } from 'class-transformer'
-import { Generation } from '../generations/generation.entity'
+import { Generation } from '../generations/entities/generation.entity'
 
 @Entity()
 export class User {

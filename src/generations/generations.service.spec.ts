@@ -3,14 +3,14 @@ import { GenerationsService } from './generations.service'
 import { getFlowProducerToken } from '@nestjs/bullmq'
 import { PdfService } from './pdf/pdf.service'
 import { User } from '../users/user.entity'
-import { Language } from './language.enum'
-import { Language as TtsLanguage } from '../external-services/tts/language.enum'
-import { Speaker } from '../external-services/tts/speaker.enum'
+import { Language } from './types/language.enum'
+import { Language as TtsLanguage } from '../external-services/tts/types/language.enum'
+import { Speaker } from '../external-services/tts/types/speaker.enum'
 import { repositoryMock } from '../../test/mocks/repository.mock'
 import { GenerationsRepository } from './generations.repository'
 import { usersFactory } from '../../test/factories/users.factory'
 import { generationsFactory } from '../../test/factories/generations.factory'
-import { Generation } from './generation.entity'
+import { Generation } from './entities/generation.entity'
 import {
   DOWNLOAD_QUEUE,
   DOWNLOAD_STEP,
@@ -19,12 +19,12 @@ import {
   NORMALIZE_TEXT_STEP,
   TEXT_NORMALIZATION_QUEUE,
 } from './generations.constants'
-import { GenerationJobData } from './generation-job-data.interface'
-import { DownloadJobData } from './download-job-data.interface'
-import { TextNormalizationJobData } from './text-normalization-job-data.interface'
+import { GenerationJobData } from './types/generation-job-data.interface'
+import { DownloadJobData } from './types/download-job-data.interface'
+import { TextNormalizationJobData } from './types/text-normalization-job-data.interface'
 import { rm, stat } from 'fs/promises'
 import { faker } from '@faker-js/faker'
-import { GenerationStatus } from './generation-status.enum'
+import { GenerationStatus } from './types/generation-status.enum'
 
 const flowProducerMock = () => ({
   add: jest.fn(),

@@ -1,16 +1,16 @@
 import { InjectFlowProducer } from '@nestjs/bullmq'
 import { Injectable, Logger } from '@nestjs/common'
 import { FlowProducer } from 'bullmq'
-import { StartGenerationParams } from './start-generation-params.interface'
+import { StartGenerationParams } from './types/start-generation-params.interface'
 import { rm, stat } from 'node:fs/promises'
 import { PdfService } from './pdf/pdf.service'
 import { User } from '../users/user.entity'
 import { GenerationsRepository } from './generations.repository'
-import { TextNormalizationJobData } from './text-normalization-job-data.interface'
-import { GenerationJobData } from './generation-job-data.interface'
-import { Generation } from './generation.entity'
-import { GenerationStatus } from './generation-status.enum'
-import { DownloadJobData } from './download-job-data.interface'
+import { TextNormalizationJobData } from './types/text-normalization-job-data.interface'
+import { GenerationJobData } from './types/generation-job-data.interface'
+import { Generation } from './entities/generation.entity'
+import { GenerationStatus } from './types/generation-status.enum'
+import { DownloadJobData } from './types/download-job-data.interface'
 import {
   DOWNLOAD_QUEUE,
   DOWNLOAD_STEP,

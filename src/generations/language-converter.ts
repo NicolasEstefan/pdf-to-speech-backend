@@ -1,6 +1,6 @@
-import { Language as TtsLanguage } from '../external-services/tts/language.enum'
+import { Language as TtsLanguage } from '../external-services/tts/types/language.enum'
 import { Language as PdfLanguage } from './pdf/language.enum'
-import { Language } from './language.enum'
+import { Language } from './types/language.enum'
 
 export function getTtsLanguage(language: Language): TtsLanguage {
   switch (language) {
