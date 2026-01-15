@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   FileTypeValidator,
+  Get,
   HttpCode,
   HttpStatus,
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -22,6 +24,7 @@ import { writeFile } from 'node:fs/promises'
 import { ConfigService } from '@nestjs/config'
 import { v4 as uuid } from 'uuid'
 import path from 'node:path'
+import { GetGenerationsDto } from './dto/get-generations.dto'
 
 @Controller('generations')
 @UseGuards(AuthGuard())
@@ -60,5 +63,13 @@ export class GenerationsController {
       speaker: startGenerationDto.speaker,
       pdfFilePath: tempFilePath,
     })
+  }
+
+  @Get('/')
+  async getGenerations(
+    @GetUser() user: User,
+    @Query() getGenerationsDto: GetGenerationsDto,
+  ) {
+    return await this.generationsService.getGenerations(user, getGenerationsDto)
   }
 }

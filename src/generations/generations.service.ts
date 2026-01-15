@@ -21,6 +21,8 @@ import {
   TEXT_NORMALIZATION_QUEUE,
 } from './generations.constants'
 import { getPdfLanguage, getTtsLanguage } from './language-converter'
+import { PaginatedResult } from '../types/paginated-result'
+import { GetGenerationsDto } from './dto/get-generations.dto'
 
 @Injectable()
 export class GenerationsService {
@@ -128,5 +130,25 @@ export class GenerationsService {
         status: GenerationStatus.FAILED,
       },
     )
+  }
+
+  async getGenerations(
+    user: User,
+    getGenerationsDto: GetGenerationsDto,
+  ): Promise<PaginatedResult<Generation>> {
+    const { page, pageSize } = getGenerationsDto
+
+    const [generations, total] = await this.generationsRepository.findAndCount({
+      where: {
+        createdBy: user,
+      },
+      take: pageSize,
+      skip: (page - 1) * pageSize,
+    })
+
+    return {
+      totalPages: Math.ceil(total / pageSize),
+      data: generations,
+    }
   }
 }

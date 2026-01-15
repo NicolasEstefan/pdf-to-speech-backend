@@ -1,11 +1,14 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { Generation } from './generation.entity'
+import { Exclude } from 'class-transformer'
 
 @Entity()
 export class Audio {
@@ -16,7 +19,14 @@ export class Audio {
   size: number
 
   @Column()
+  @Exclude({ toPlainOnly: true })
   filePath: string
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date
 
   @OneToOne(() => Generation, (generation) => generation.audio, {
     onDelete: 'CASCADE',

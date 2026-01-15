@@ -4,6 +4,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { GenerationStatus } from '../types/generation-status.enum'
 import { User } from '../../users/user.entity'
@@ -19,6 +21,12 @@ export class Generation {
 
   @Column()
   status: GenerationStatus
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date
 
   @ManyToOne(() => User, (user) => user.generations, {
     eager: false,
