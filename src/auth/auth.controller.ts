@@ -59,7 +59,7 @@ export class AuthController {
     }
 
     const refreshResult = await this.authService.refreshToken(
-      req.cookies.refres_token as string,
+      req.cookies.refresh_token as string,
     )
 
     this.setCookie(res, 'access_token', refreshResult.accessToken)

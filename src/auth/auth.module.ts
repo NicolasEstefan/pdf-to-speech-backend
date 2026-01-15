@@ -7,7 +7,7 @@ import { PassportModule } from '@nestjs/passport'
 import { JwtModule } from '@nestjs/jwt'
 import { GoogleStrategy } from './google.strategy'
 import { RefreshToken } from './refresh-token.entity'
-import { UsersModule } from 'src/users/users.module'
+import { UsersModule } from '../users/users.module'
 import { JwtStrategy } from './jwt.strategy'
 import { RefreshTokensRepository } from './refresh-tokens.repository'
 

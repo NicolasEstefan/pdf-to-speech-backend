@@ -18,9 +18,12 @@ import {
   DOWNLOAD_QUEUE,
   GENERATIONS_FLOW_PRODUCER,
 } from './generations.constants'
+import { GenerationsController } from './generations.controller'
+import { AuthModule } from '../auth/auth.module'
 
 @Module({
   imports: [
+    AuthModule,
     ConfigModule,
     ExternalServicesModule,
     TypeOrmModule.forFeature([Generation, Audio]),
@@ -48,5 +51,6 @@ import {
     TextNormalizationWorker,
     DownloadWorker,
   ],
+  controllers: [GenerationsController],
 })
 export class GenerationsModule {}

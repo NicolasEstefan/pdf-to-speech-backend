@@ -1,7 +1,7 @@
 import { InjectFlowProducer } from '@nestjs/bullmq'
 import { Injectable, Logger } from '@nestjs/common'
 import { FlowProducer } from 'bullmq'
-import { StartGenerationDto } from './start-generation.dto'
+import { StartGenerationParams } from './start-generation-params.interface'
 import { rm, stat } from 'node:fs/promises'
 import { PdfService } from './pdf/pdf.service'
 import { User } from '../users/user.entity'
@@ -37,7 +37,7 @@ export class GenerationsService {
 
   async startGeneration(
     user: User,
-    startGenerationDto: StartGenerationDto,
+    startGenerationDto: StartGenerationParams,
   ): Promise<Generation> {
     try {
       const pages = await this.pdfService.extractTextFromPages(

@@ -1,10 +1,8 @@
-import { IsEnum } from 'class-validator'
 import { Speaker } from '../external-services/tts/speaker.enum'
 import { Language } from './language.enum'
 
-export class StartGenerationDto {
-  @IsEnum(Language)
+export class StartGenerationParams {
+  pdfFilePath: string
   language: Language
-  @IsEnum(Speaker)
   speaker: Speaker
 }
