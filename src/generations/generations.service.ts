@@ -151,4 +151,18 @@ export class GenerationsService {
       data: generations,
     }
   }
+
+  async getGenerationById(user: User, id: string): Promise<Generation | null> {
+    const generation = await this.generationsRepository.findOne({
+      where: {
+        id,
+        createdBy: user,
+      },
+      relations: {
+        createdBy: true,
+      },
+    })
+
+    return generation
+  }
 }

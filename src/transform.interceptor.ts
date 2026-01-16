@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   CallHandler,
+  StreamableFile,
 } from '@nestjs/common'
 import { instanceToPlain } from 'class-transformer'
 import { map } from 'rxjs/operators'
@@ -10,6 +11,12 @@ import { map } from 'rxjs/operators'
 @Injectable()
 export class TransformInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>) {
-    return next.handle().pipe(map((data) => instanceToPlain(data)))
+    return next
+      .handle()
+      .pipe(
+        map((data) =>
+          data instanceof StreamableFile ? data : instanceToPlain(data),
+        ),
+      )
   }
 }

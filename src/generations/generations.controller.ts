@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   FileTypeValidator,
@@ -6,9 +7,12 @@ import {
   HttpCode,
   HttpStatus,
   MaxFileSizeValidator,
+  NotFoundException,
+  Param,
   ParseFilePipe,
   Post,
   Query,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -25,6 +29,7 @@ import { ConfigService } from '@nestjs/config'
 import { v4 as uuid } from 'uuid'
 import path from 'node:path'
 import { GetGenerationsDto } from './dto/get-generations.dto'
+import { createReadStream } from 'node:fs'
 
 @Controller('generations')
 @UseGuards(AuthGuard())
@@ -71,5 +76,23 @@ export class GenerationsController {
     @Query() getGenerationsDto: GetGenerationsDto,
   ) {
     return await this.generationsService.getGenerations(user, getGenerationsDto)
+  }
+
+  @Get('/:id/audio')
+  async getGeneration(@GetUser() user: User, @Param('id') id: string) {
+    const generation = await this.generationsService.getGenerationById(user, id)
+    if (!generation) {
+      throw new NotFoundException()
+    }
+
+    if (!generation.audio) {
+      throw new BadRequestException('The generation has no associated audio')
+    }
+
+    const filePath = generation.audio.filePath
+    const file = createReadStream(filePath)
+    return new StreamableFile(file, {
+      disposition: `attachment; filename="${generation.title}.wav"`,
+    })
   }
 }
