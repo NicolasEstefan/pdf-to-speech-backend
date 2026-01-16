@@ -20,6 +20,7 @@ import {
 } from './generations.constants'
 import { GenerationsController } from './generations.controller'
 import { AuthModule } from '../auth/auth.module'
+import { OptionsController } from './options.controller'
 
 @Module({
   imports: [
@@ -51,6 +52,6 @@ import { AuthModule } from '../auth/auth.module'
     TextNormalizationWorker,
     DownloadWorker,
   ],
-  controllers: [GenerationsController],
+  controllers: [GenerationsController, OptionsController],
 })
 export class GenerationsModule {}
