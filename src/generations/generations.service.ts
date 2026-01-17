@@ -144,6 +144,9 @@ export class GenerationsService {
       },
       take: pageSize,
       skip: (page - 1) * pageSize,
+      order: {
+        createdAt: 'DESC',
+      },
     })
 
     return {
