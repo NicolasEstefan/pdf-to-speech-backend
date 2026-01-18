@@ -42,6 +42,7 @@ describe('TtsService', () => {
   const MOCK_TTS_MAX_WAIT = 0.5
 
   const MOCK_GOOGLE_ACCESS_TOKEN = faker.internet.jwt()
+  const MOCK_GOOGLE_OPERATION_NAME = 'test-generation-name'
 
   const MOCK_TEXT = 'This is a test'
   const MOCK_ID = faker.string.uuid()
@@ -103,7 +104,9 @@ describe('TtsService', () => {
   describe('textToSpeech', () => {
     describe('when no errors occur', () => {
       beforeEach(() => {
-        mockedAxios.post.mockResolvedValue({ data: {} })
+        mockedAxios.post.mockResolvedValue({
+          data: { name: MOCK_GOOGLE_OPERATION_NAME },
+        })
         mockedAxios.get.mockResolvedValueOnce({
           data: {
             metadata: {
@@ -198,12 +201,15 @@ describe('TtsService', () => {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockedAxios.get).toHaveBeenCalledTimes(2)
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockedAxios.get).toHaveBeenCalledWith(MOCK_PROGRESS_CHECK_URL, {
-          headers: {
-            Authorization: `Bearer ${MOCK_GOOGLE_ACCESS_TOKEN}`,
-            'x-goog-user-project': MOCK_GCLOUD_PROJECT_ID,
+        expect(mockedAxios.get).toHaveBeenCalledWith(
+          `${MOCK_PROGRESS_CHECK_URL}/${MOCK_GOOGLE_OPERATION_NAME}`,
+          {
+            headers: {
+              Authorization: `Bearer ${MOCK_GOOGLE_ACCESS_TOKEN}`,
+              'x-goog-user-project': MOCK_GCLOUD_PROJECT_ID,
+            },
           },
-        })
+        )
       })
     })
 

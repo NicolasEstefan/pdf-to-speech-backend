@@ -1,6 +1,6 @@
 export interface GoogleTtsProgressResponse {
   metadata: {
-    progressPercentage: number
+    progressPercentage?: number
   }
   error?: object
 }

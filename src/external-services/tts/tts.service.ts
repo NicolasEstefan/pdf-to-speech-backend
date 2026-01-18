@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import axios from 'axios'
 import { GcsService } from '../gcs/gcs.service'
@@ -16,6 +16,7 @@ import { TimeoutException } from './exeptions/timeout.exception'
 @Injectable()
 export class TtsService {
   private readonly googleAuth: GoogleAuth
+  private readonly logger: Logger = new Logger(TtsService.name)
 
   constructor(
     private readonly configService: ConfigService,
@@ -55,7 +56,7 @@ export class TtsService {
       outputGcsUri,
     }
 
-    const response = await axios.post<GoogleTtsResponse>(
+    const startGenerationResponse = await axios.post<GoogleTtsResponse>(
       this.configService.getOrThrow('GCLOUD_TTS_URL'),
       requestBody,
       {
@@ -63,28 +64,35 @@ export class TtsService {
       },
     )
 
-    if (response.data.error) {
-      throw new InitializationFailedException(response.data.error)
+    if (startGenerationResponse.data.error) {
+      throw new InitializationFailedException(
+        startGenerationResponse.data.error,
+      )
     }
 
     const startTime = dayjs()
     const maxWait = this.configService.getOrThrow<number>('TTS_MAX_WAIT')
+    const progressCheckUrl = `${this.configService.getOrThrow('GCLOUD_TTS_PROGRESS_CHECK_URL')}/${startGenerationResponse.data.name}`
     let progress = 0
 
     while (progress < 100 && dayjs().diff(startTime, 'seconds') < maxWait) {
       const progressCheckResponse = await axios.get<GoogleTtsProgressResponse>(
-        this.configService.getOrThrow('GCLOUD_TTS_PROGRESS_CHECK_URL'),
+        progressCheckUrl,
         {
           headers: this.getHeaders(token),
         },
       )
 
       if (progressCheckResponse.data.error) {
+        this.logger.error(progressCheckResponse.data)
         throw new TtsFailedException(progressCheckResponse.data.error)
       }
 
-      progress = progressCheckResponse.data.metadata.progressPercentage
-      if (reportProgressCallback) {
+      const reportedProgress =
+        progressCheckResponse.data.metadata.progressPercentage
+
+      if (reportProgressCallback && reportedProgress) {
+        progress = reportedProgress
         reportProgressCallback(progress)
       }
 
