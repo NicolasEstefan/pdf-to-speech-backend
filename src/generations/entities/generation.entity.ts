@@ -33,6 +33,8 @@ export class Generation {
     onDelete: 'CASCADE',
   })
   createdBy: User
+  @Column()
+  createdById: string
 
   @OneToOne(() => Audio, (audio) => audio.generation, {
     eager: true,

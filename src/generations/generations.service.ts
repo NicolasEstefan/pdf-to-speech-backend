@@ -23,6 +23,7 @@ import {
 import { getPdfLanguage, getTtsLanguage } from './language-converter'
 import { PaginatedResult } from '../types/paginated-result'
 import { GetGenerationsDto } from './dto/get-generations.dto'
+import { GenerationsGateway } from './generations.gateway'
 
 @Injectable()
 export class GenerationsService {
@@ -35,6 +36,7 @@ export class GenerationsService {
     private readonly generationsFlowProducer: FlowProducer,
     private readonly pdfService: PdfService,
     private readonly generationsRepository: GenerationsRepository,
+    private readonly generationsGateway: GenerationsGateway,
   ) {}
 
   async startGeneration(
@@ -112,24 +114,60 @@ export class GenerationsService {
     }
   }
 
+  async reportGenerationProgress(
+    generationId: string,
+    progressPercentage: number,
+  ) {
+    const generation = await this.generationsRepository.findOneBy({
+      id: generationId,
+    })
+    if (!generation) {
+      return
+    }
+
+    generation.status = GenerationStatus.IN_PROGRESS
+    await this.generationsRepository.save(generation)
+    this.generationsGateway.emitGenerationProgress({
+      createdById: generation.createdById,
+      generationId: generation.id,
+      generationStatus: generation.status,
+      progressPercentage: progressPercentage,
+    })
+  }
+
   async finishGeneration(generationId: string, audioFilePath: string) {
     const stats = await stat(audioFilePath)
-    await this.generationsRepository.finishGeneration(
+    const generation = await this.generationsRepository.finishGeneration(
       generationId,
       audioFilePath,
       stats.size,
     )
+    this.generationsGateway.emitGenerationProgress({
+      createdById: generation.createdById,
+      generationId: generation.id,
+      generationStatus: generation.status,
+      progressPercentage: 100,
+    })
   }
 
   async failGeneration(generationId: string) {
-    await this.generationsRepository.update(
-      {
-        id: generationId,
-      },
-      {
-        status: GenerationStatus.FAILED,
-      },
-    )
+    const generation = await this.generationsRepository.findOneBy({
+      id: generationId,
+    })
+
+    if (!generation) {
+      return
+    }
+
+    generation.status = GenerationStatus.FAILED
+    await this.generationsRepository.save(generation)
+
+    this.generationsGateway.emitGenerationProgress({
+      createdById: generation.createdById,
+      generationId: generation.id,
+      generationStatus: generation.status,
+      progressPercentage: 100,
+    })
   }
 
   async getGenerations(

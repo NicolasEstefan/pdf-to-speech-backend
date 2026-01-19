@@ -21,6 +21,7 @@ import {
 import { GenerationsController } from './generations.controller'
 import { AuthModule } from '../auth/auth.module'
 import { OptionsController } from './options.controller'
+import { GenerationsGateway } from './generations.gateway'
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { OptionsController } from './options.controller'
     GenerationWorker,
     TextNormalizationWorker,
     DownloadWorker,
+    GenerationsGateway,
   ],
   controllers: [GenerationsController, OptionsController],
 })

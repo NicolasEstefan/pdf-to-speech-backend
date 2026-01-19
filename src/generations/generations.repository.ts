@@ -14,7 +14,7 @@ export class GenerationsRepository extends Repository<Generation> {
   async createGeneration(user: User) {
     const generation = this.create({
       createdBy: user,
-      status: GenerationStatus.PENDING,
+      status: GenerationStatus.IN_PROGRESS,
       title: 'generation',
     })
 
@@ -26,8 +26,8 @@ export class GenerationsRepository extends Repository<Generation> {
     generationId: string,
     audioFilePath: string,
     audioSize: number,
-  ) {
-    await this.dataSource.transaction(async (manager) => {
+  ): Promise<Generation> {
+    const generation = await this.dataSource.transaction(async (manager) => {
       const audio = manager.create(Audio, {
         filePath: audioFilePath,
         generation: { id: generationId },
@@ -36,15 +36,15 @@ export class GenerationsRepository extends Repository<Generation> {
 
       await manager.save(Audio, audio)
 
-      await manager.update(
-        Generation,
-        {
-          id: generationId,
-        },
-        {
-          status: GenerationStatus.DONE,
-        },
-      )
+      const generation = await manager.findOneBy(Generation, {
+        id: generationId,
+      })
+      generation!.status = GenerationStatus.DONE
+      await manager.save(generation)
+
+      return generation!
     })
+
+    return generation
   }
 }

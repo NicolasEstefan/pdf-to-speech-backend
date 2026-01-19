@@ -23,6 +23,11 @@ export class DownloadWorker extends WorkerHost {
   }
 
   async process(job: Job<DownloadJobData, string>) {
+    await this.generationsService.reportGenerationProgress(
+      job.data.generationId,
+      66.6,
+    )
+
     const childrenValues = await job.getChildrenValues<string>()
     const fileName = Object.values(childrenValues)[0]
 

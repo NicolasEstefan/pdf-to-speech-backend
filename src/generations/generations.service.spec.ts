@@ -25,6 +25,7 @@ import { TextNormalizationJobData } from './types/text-normalization-job-data.in
 import { rm, stat } from 'fs/promises'
 import { faker } from '@faker-js/faker'
 import { GenerationStatus } from './types/generation-status.enum'
+import { GenerationsGateway } from './generations.gateway'
 
 const flowProducerMock = () => ({
   add: jest.fn(),
@@ -43,6 +44,10 @@ const generationsRepositoryMock = () => ({
   ...repositoryMock(),
   createGeneration: jest.fn(),
   finishGeneration: jest.fn(),
+})
+
+const generationsGatewayMock = () => ({
+  emitGenerationProgress: jest.fn(),
 })
 
 describe('GenerationsService', () => {
@@ -69,6 +74,10 @@ describe('GenerationsService', () => {
           provide: GenerationsRepository,
           useFactory: generationsRepositoryMock,
         },
+        {
+          provide: GenerationsGateway,
+          useFactory: generationsGatewayMock,
+        },
       ],
     }).compile()
 
@@ -92,9 +101,7 @@ describe('GenerationsService', () => {
 
     beforeEach(() => {
       mockUser = usersFactory.build()
-      mockGeneration = generationsFactory
-        .associations({ createdBy: mockUser })
-        .build()
+      mockGeneration = generationsFactory.build({ createdBy: mockUser })
 
       pdfService.extractTextFromPages.mockResolvedValue(MOCK_PAGES)
       generationsRepository.createGeneration.mockResolvedValue(mockGeneration)
@@ -221,9 +228,12 @@ describe('GenerationsService', () => {
     const MOCK_GENERATION_ID = faker.string.uuid()
     const MOCK_AUDIO_FILE_PATH = 'files/audios/test.wav'
     const mockedStat = stat as jest.Mock
+    let mockGeneration: Generation
 
     beforeEach(() => {
       mockedStat.mockResolvedValue({ size: MOCK_FILE_SIZE })
+      mockGeneration = generationsFactory.build()
+      generationsRepository.finishGeneration.mockResolvedValue(mockGeneration)
     })
 
     it('should call generationsRepository.finishGeneration', async () => {
@@ -243,19 +253,19 @@ describe('GenerationsService', () => {
 
   describe('failGeneration', () => {
     const MOCK_GENERATION_ID = faker.string.uuid()
+    let mockGeneration: Generation
+
+    beforeEach(() => {
+      mockGeneration = generationsFactory.build()
+      generationsRepository.findOneBy.mockResolvedValue(mockGeneration)
+    })
 
     it('should update the generation with the appropriate params', async () => {
       await generationsService.failGeneration(MOCK_GENERATION_ID)
 
-      expect(generationsRepository.update).toHaveBeenCalledTimes(1)
-      expect(generationsRepository.update).toHaveBeenCalledWith(
-        {
-          id: MOCK_GENERATION_ID,
-        },
-        {
-          status: GenerationStatus.FAILED,
-        },
-      )
+      expect(mockGeneration.status).toEqual(GenerationStatus.FAILED)
+      expect(generationsRepository.save).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.save).toHaveBeenCalledWith(mockGeneration)
     })
   })
 })

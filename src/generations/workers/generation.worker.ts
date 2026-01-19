@@ -5,6 +5,7 @@ import { GenerationJobData } from '../types/generation-job-data.interface'
 import { Logger } from '@nestjs/common'
 import { TextNormalizationJobResult } from '../types/text-normalization-job-result.interface'
 import { GENERATION_QUEUE } from '../generations.constants'
+import { GenerationsService } from '../generations.service'
 
 @Processor(GENERATION_QUEUE, { concurrency: 100 })
 export class GenerationWorker extends WorkerHost {
@@ -12,11 +13,19 @@ export class GenerationWorker extends WorkerHost {
     timestamp: true,
   })
 
-  constructor(private readonly ttsService: TtsService) {
+  constructor(
+    private readonly ttsService: TtsService,
+    private readonly generationsService: GenerationsService,
+  ) {
     super()
   }
 
   async process(job: Job<GenerationJobData, void>) {
+    await this.generationsService.reportGenerationProgress(
+      job.data.generationId,
+      33.3,
+    )
+
     const childrenResults =
       await job.getChildrenValues<TextNormalizationJobResult>()
 
@@ -59,7 +68,14 @@ export class GenerationWorker extends WorkerHost {
     )
   }
 
-  private ttsProgressReportCallback(generationId: string, progress: number) {
+  private async ttsProgressReportCallback(
+    generationId: string,
+    progress: number,
+  ) {
     this.logger.verbose(`TTS at ${progress}% for generation ${generationId}`)
+    await this.generationsService.reportGenerationProgress(
+      generationId,
+      33.3 + progress / 3,
+    )
   }
 }

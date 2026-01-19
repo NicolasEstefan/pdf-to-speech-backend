@@ -10,6 +10,7 @@ import { RefreshToken } from './refresh-token.entity'
 import { UsersModule } from '../users/users.module'
 import { JwtStrategy } from './jwt.strategy'
 import { RefreshTokensRepository } from './refresh-tokens.repository'
+import { WsAuthService } from './ws-auth.service'
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { RefreshTokensRepository } from './refresh-tokens.repository'
     GoogleStrategy,
     JwtStrategy,
     RefreshTokensRepository,
+    WsAuthService,
   ],
-  exports: [JwtStrategy, PassportModule],
+  exports: [JwtStrategy, PassportModule, WsAuthService, JwtModule, UsersModule],
 })
 export class AuthModule {}
