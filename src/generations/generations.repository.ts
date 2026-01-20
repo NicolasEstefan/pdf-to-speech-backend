@@ -11,11 +11,11 @@ export class GenerationsRepository extends Repository<Generation> {
     super(Generation, dataSource.manager)
   }
 
-  async createGeneration(user: User) {
+  async createGeneration(user: User, title: string) {
     const generation = this.create({
       createdBy: user,
       status: GenerationStatus.IN_PROGRESS,
-      title: 'generation',
+      title,
     })
 
     await this.save(generation)

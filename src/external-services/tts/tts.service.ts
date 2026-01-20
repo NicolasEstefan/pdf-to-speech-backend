@@ -93,7 +93,7 @@ export class TtsService {
 
       if (reportProgressCallback && reportedProgress) {
         progress = reportedProgress
-        reportProgressCallback(progress)
+        await reportProgressCallback(progress)
       }
 
       await new Promise((resolve) =>

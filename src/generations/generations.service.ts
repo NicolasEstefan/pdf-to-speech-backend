@@ -24,6 +24,7 @@ import { getPdfLanguage, getTtsLanguage } from './language-converter'
 import { PaginatedResult } from '../types/paginated-result'
 import { GetGenerationsDto } from './dto/get-generations.dto'
 import { GenerationsGateway } from './generations.gateway'
+import { LlmService } from '../external-services/llm/llm.service'
 
 @Injectable()
 export class GenerationsService {
@@ -37,6 +38,7 @@ export class GenerationsService {
     private readonly pdfService: PdfService,
     private readonly generationsRepository: GenerationsRepository,
     private readonly generationsGateway: GenerationsGateway,
+    private readonly llmService: LlmService,
   ) {}
 
   async startGeneration(
@@ -49,7 +51,12 @@ export class GenerationsService {
         getPdfLanguage(startGenerationDto.language),
       )
 
-      const generation = await this.generationsRepository.createGeneration(user)
+      const title = await this.llmService.generateTitle(pages[0])
+
+      const generation = await this.generationsRepository.createGeneration(
+        user,
+        title,
+      )
 
       const ttsLanguage = getTtsLanguage(startGenerationDto.language)
 

@@ -26,6 +26,7 @@ import { rm, stat } from 'fs/promises'
 import { faker } from '@faker-js/faker'
 import { GenerationStatus } from './types/generation-status.enum'
 import { GenerationsGateway } from './generations.gateway'
+import { LlmService } from '../external-services/llm/llm.service'
 
 const flowProducerMock = () => ({
   add: jest.fn(),
@@ -33,6 +34,10 @@ const flowProducerMock = () => ({
 
 const pdfServiceMock = () => ({
   extractTextFromPages: jest.fn(),
+})
+
+const llmServiceMock = () => ({
+  generateTitle: jest.fn(),
 })
 
 jest.mock('node:fs/promises', () => ({
@@ -77,6 +82,10 @@ describe('GenerationsService', () => {
         {
           provide: GenerationsGateway,
           useFactory: generationsGatewayMock,
+        },
+        {
+          provide: LlmService,
+          useFactory: llmServiceMock,
         },
       ],
     }).compile()
