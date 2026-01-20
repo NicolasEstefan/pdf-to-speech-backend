@@ -6,5 +6,5 @@ export interface TtsParams {
   id: string
   language: Language
   speaker: Speaker
-  reportProgressCallback?: (progress: number) => void
+  reportProgressCallback?: (progress: number) => Promise<void>
 }

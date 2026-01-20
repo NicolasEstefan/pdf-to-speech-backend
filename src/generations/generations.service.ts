@@ -147,6 +147,7 @@ export class GenerationsService {
       generationId: generation.id,
       generationStatus: generation.status,
       progressPercentage: 100,
+      audioSize: stats.size,
     })
   }
 
@@ -160,6 +161,7 @@ export class GenerationsService {
     }
 
     generation.status = GenerationStatus.FAILED
+    generation.progressPercentage = 100
     await this.generationsRepository.save(generation)
 
     this.generationsGateway.emitGenerationProgress({

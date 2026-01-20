@@ -7,14 +7,30 @@ import { Logger } from '@nestjs/common'
 import { Server, Socket } from 'socket.io'
 import { WsAuthService } from '../auth/ws-auth.service'
 import { GenerationProgress } from './types/generation-progress.interface'
+import { ConfigService } from '@nestjs/config'
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+})
 export class GenerationsGateway implements OnGatewayConnection {
   logger: Logger = new Logger(GenerationsGateway.name)
   @WebSocketServer()
   server: Server
 
-  constructor(private readonly wsAuthService: WsAuthService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly wsAuthService: WsAuthService,
+  ) {}
+
+  afterInit(server: Server) {
+    const corsOptions = server.engine.opts.cors
+    if (corsOptions && typeof corsOptions === 'object') {
+      corsOptions.origin = this.configService.getOrThrow('FRONTEND_URL')
+    }
+  }
 
   async handleConnection(client: Socket) {
     const user = await this.wsAuthService.getAuthenticatedUser(client)

@@ -22,6 +22,9 @@ export class Generation {
   @Column()
   status: GenerationStatus
 
+  @Column({ default: 0 })
+  progressPercentage: number
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 

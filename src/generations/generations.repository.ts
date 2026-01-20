@@ -40,6 +40,7 @@ export class GenerationsRepository extends Repository<Generation> {
         id: generationId,
       })
       generation!.status = GenerationStatus.DONE
+      generation!.progressPercentage = 100
       await manager.save(generation)
 
       return generation!

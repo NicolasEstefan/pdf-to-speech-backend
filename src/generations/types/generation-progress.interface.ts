@@ -5,4 +5,5 @@ export interface GenerationProgress {
   generationId: string
   generationStatus: GenerationStatus
   progressPercentage: number
+  audioSize?: number
 }

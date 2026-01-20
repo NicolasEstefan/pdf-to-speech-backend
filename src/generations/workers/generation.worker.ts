@@ -21,10 +21,9 @@ export class GenerationWorker extends WorkerHost {
   }
 
   async process(job: Job<GenerationJobData, void>) {
-    await this.generationsService.reportGenerationProgress(
-      job.data.generationId,
-      33.3,
-    )
+    const { generationId, speaker, language } = job.data
+
+    await this.generationsService.reportGenerationProgress(generationId, 33.3)
 
     const childrenResults =
       await job.getChildrenValues<TextNormalizationJobResult>()
@@ -32,16 +31,28 @@ export class GenerationWorker extends WorkerHost {
     const pages = Object.values(childrenResults)
     pages.sort((a, b) => a.pageNumber - b.pageNumber)
     const text = pages.map((page) => page.text).join('')
+    let ttsProgress = 0
 
     const audioFileName = await this.ttsService.textToSpeech({
       text,
-      id: job.data.generationId,
-      language: job.data.language,
-      speaker: job.data.speaker,
-      reportProgressCallback: this.ttsProgressReportCallback.bind(
-        this,
-        job.data.generationId,
-      ) as (progress: number) => void,
+      id: generationId,
+      language: language,
+      speaker: speaker,
+      reportProgressCallback: async (progress) => {
+        if (progress === ttsProgress) {
+          return
+        }
+
+        ttsProgress = progress
+
+        this.logger.verbose(
+          `TTS at ${ttsProgress}% for generation ${generationId}`,
+        )
+        await this.generationsService.reportGenerationProgress(
+          generationId,
+          33.3 + ttsProgress / 3,
+        )
+      },
     })
     return audioFileName
   }
@@ -65,17 +76,6 @@ export class GenerationWorker extends WorkerHost {
   onCompleted(job: Job<GenerationJobData, string>) {
     this.logger.verbose(
       `Completed processing of generation ${job.data.generationId}`,
-    )
-  }
-
-  private async ttsProgressReportCallback(
-    generationId: string,
-    progress: number,
-  ) {
-    this.logger.verbose(`TTS at ${progress}% for generation ${generationId}`)
-    await this.generationsService.reportGenerationProgress(
-      generationId,
-      33.3 + progress / 3,
     )
   }
 }
