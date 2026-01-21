@@ -23,7 +23,6 @@ import { GenerationJobData } from './types/generation-job-data.interface'
 import { DownloadJobData } from './types/download-job-data.interface'
 import { TextNormalizationJobData } from './types/text-normalization-job-data.interface'
 import { rm, stat } from 'fs/promises'
-import { faker } from '@faker-js/faker'
 import { GenerationStatus } from './types/generation-status.enum'
 import { GenerationsGateway } from './generations.gateway'
 import { LlmService } from '../external-services/llm/llm.service'
@@ -60,6 +59,8 @@ describe('GenerationsService', () => {
   let pdfService: ReturnType<typeof pdfServiceMock>
   let generationsFlowProducer: ReturnType<typeof flowProducerMock>
   let generationsRepository: ReturnType<typeof generationsRepositoryMock>
+  let llmService: ReturnType<typeof llmServiceMock>
+  let generationsGateway: ReturnType<typeof generationsGatewayMock>
 
   beforeEach(async () => {
     jest.resetAllMocks()
@@ -95,6 +96,8 @@ describe('GenerationsService', () => {
     )
     pdfService = module.get(PdfService)
     generationsRepository = module.get(GenerationsRepository)
+    llmService = module.get(LlmService)
+    generationsGateway = module.get(GenerationsGateway)
 
     generationsService = module.get<GenerationsService>(GenerationsService)
   })
@@ -105,6 +108,7 @@ describe('GenerationsService', () => {
     const MOCK_LANGUAGE = Language.ENGLISH
     const MOCK_TTS_LANGUAGE = TtsLanguage.EN_US
     const MOCK_SPEAKER = Speaker.ACHERNAR
+    const MOCK_TITLE = 'This is a test title'
     let mockUser: User
     let mockGeneration: Generation
 
@@ -114,6 +118,20 @@ describe('GenerationsService', () => {
 
       pdfService.extractTextFromPages.mockResolvedValue(MOCK_PAGES)
       generationsRepository.createGeneration.mockResolvedValue(mockGeneration)
+      llmService.generateTitle.mockResolvedValue(MOCK_TITLE)
+    })
+
+    it('should call the GenerationsRepository.createGeneration with the correct params', async () => {
+      await generationsService.startGeneration(mockUser, {
+        language: MOCK_LANGUAGE,
+        speaker: MOCK_SPEAKER,
+        pdfFilePath: MOCK_PDF_PATH,
+      })
+      expect(generationsRepository.createGeneration).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.createGeneration).toHaveBeenCalledWith(
+        mockUser,
+        MOCK_TITLE,
+      )
     })
 
     it('should return the created generation', async () => {
@@ -234,34 +252,50 @@ describe('GenerationsService', () => {
 
   describe('finishGeneration', () => {
     const MOCK_FILE_SIZE = 20000
-    const MOCK_GENERATION_ID = faker.string.uuid()
     const MOCK_AUDIO_FILE_PATH = 'files/audios/test.wav'
     const mockedStat = stat as jest.Mock
     let mockGeneration: Generation
 
     beforeEach(() => {
       mockedStat.mockResolvedValue({ size: MOCK_FILE_SIZE })
-      mockGeneration = generationsFactory.build()
+      mockGeneration = generationsFactory.build({
+        status: GenerationStatus.DONE,
+      })
       generationsRepository.finishGeneration.mockResolvedValue(mockGeneration)
     })
 
-    it('should call generationsRepository.finishGeneration', async () => {
+    it('should call generationsRepository.finishGeneration with the correct params', async () => {
       await generationsService.finishGeneration(
-        MOCK_GENERATION_ID,
+        mockGeneration.id,
         MOCK_AUDIO_FILE_PATH,
       )
 
       expect(generationsRepository.finishGeneration).toHaveBeenCalledTimes(1)
       expect(generationsRepository.finishGeneration).toHaveBeenCalledWith(
-        MOCK_GENERATION_ID,
+        mockGeneration.id,
         MOCK_AUDIO_FILE_PATH,
         MOCK_FILE_SIZE,
       )
     })
+
+    it('should call GenerationsGateway.emitGenerationProgress with the correct params', async () => {
+      await generationsService.finishGeneration(
+        mockGeneration.id,
+        MOCK_AUDIO_FILE_PATH,
+      )
+
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledTimes(1)
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledWith({
+        createdById: mockGeneration.createdById,
+        generationId: mockGeneration.id,
+        generationStatus: GenerationStatus.DONE,
+        progressPercentage: 100,
+        audioSize: MOCK_FILE_SIZE,
+      })
+    })
   })
 
   describe('failGeneration', () => {
-    const MOCK_GENERATION_ID = faker.string.uuid()
     let mockGeneration: Generation
 
     beforeEach(() => {
@@ -270,11 +304,149 @@ describe('GenerationsService', () => {
     })
 
     it('should update the generation with the appropriate params', async () => {
-      await generationsService.failGeneration(MOCK_GENERATION_ID)
+      await generationsService.failGeneration(mockGeneration.id)
 
       expect(mockGeneration.status).toEqual(GenerationStatus.FAILED)
+      expect(mockGeneration.progressPercentage).toEqual(100)
       expect(generationsRepository.save).toHaveBeenCalledTimes(1)
       expect(generationsRepository.save).toHaveBeenCalledWith(mockGeneration)
+    })
+
+    it('should call GenerationsGateway.emitGenerationProgress with the correct params', async () => {
+      await generationsService.failGeneration(mockGeneration.id)
+
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledTimes(1)
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledWith({
+        createdById: mockGeneration.createdById,
+        generationId: mockGeneration.id,
+        generationStatus: GenerationStatus.FAILED,
+        progressPercentage: 100,
+      })
+    })
+  })
+
+  describe('reportGenerationProgress', () => {
+    let mockGeneration: Generation
+
+    beforeEach(() => {
+      mockGeneration = generationsFactory.build()
+      generationsRepository.findOneBy.mockResolvedValue(mockGeneration)
+    })
+
+    it('should update the progress percentage', async () => {
+      await generationsService.reportGenerationProgress(mockGeneration.id, 5)
+
+      expect(mockGeneration.progressPercentage).toEqual(5)
+      expect(generationsRepository.save).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.save).toHaveBeenCalledWith(mockGeneration)
+    })
+
+    it('should call GenerationsGateway.emitGenerationProgress with the correct params', async () => {
+      await generationsService.reportGenerationProgress(mockGeneration.id, 5)
+
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledTimes(1)
+      expect(generationsGateway.emitGenerationProgress).toHaveBeenCalledWith({
+        createdById: mockGeneration.createdById,
+        generationId: mockGeneration.id,
+        generationStatus: GenerationStatus.IN_PROGRESS,
+        progressPercentage: 5,
+      })
+    })
+  })
+
+  describe('getGenerations', () => {
+    let mockUser: User
+    let mockGenerations: Generation[]
+    const MOCK_PAGE_SIZE = 5
+
+    beforeEach(() => {
+      mockUser = usersFactory.build()
+      mockGenerations = generationsFactory.buildList(MOCK_PAGE_SIZE)
+      generationsRepository.findAndCount.mockResolvedValue([
+        mockGenerations,
+        MOCK_PAGE_SIZE * 2,
+      ])
+    })
+
+    it('should call GenerationsRepository.findAndCount with the correct params', async () => {
+      await generationsService.getGenerations(mockUser, {
+        page: 1,
+        pageSize: MOCK_PAGE_SIZE,
+      })
+
+      expect(generationsRepository.findAndCount).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.findAndCount).toHaveBeenCalledWith({
+        where: {
+          createdBy: mockUser,
+        },
+        take: MOCK_PAGE_SIZE,
+        skip: 0,
+        order: {
+          createdAt: 'DESC',
+        },
+      })
+    })
+
+    it('should correctly compute the offset when requesting a page', async () => {
+      await generationsService.getGenerations(mockUser, {
+        page: 2,
+        pageSize: MOCK_PAGE_SIZE,
+      })
+
+      expect(generationsRepository.findAndCount).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.findAndCount).toHaveBeenCalledWith({
+        where: {
+          createdBy: mockUser,
+        },
+        take: MOCK_PAGE_SIZE,
+        skip: MOCK_PAGE_SIZE,
+        order: {
+          createdAt: 'DESC',
+        },
+      })
+    })
+
+    it('should return the total number of pages and the generations', async () => {
+      const result = await generationsService.getGenerations(mockUser, {
+        page: 1,
+        pageSize: MOCK_PAGE_SIZE,
+      })
+
+      expect(result.totalPages).toEqual(2)
+      expect(result.data).toEqual(mockGenerations)
+    })
+  })
+
+  describe('getGenerationById', () => {
+    let mockUser: User
+    let mockGeneration: Generation
+
+    beforeEach(() => {
+      mockUser = usersFactory.build()
+      mockGeneration = generationsFactory.build({ createdBy: mockUser })
+
+      generationsRepository.findOne.mockResolvedValue(mockGeneration)
+    })
+
+    it('should call generationsRepository.findOne with the correctParams', async () => {
+      await generationsService.getGenerationById(mockUser, mockGeneration.id)
+
+      expect(generationsRepository.findOne).toHaveBeenCalledTimes(1)
+      expect(generationsRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: mockGeneration.id,
+          createdBy: mockUser,
+        },
+      })
+    })
+
+    it('should return the found generation', async () => {
+      const result = await generationsService.getGenerationById(
+        mockUser,
+        mockGeneration.id,
+      )
+
+      expect(result).toEqual(mockGeneration)
     })
   })
 })

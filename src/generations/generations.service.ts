@@ -132,7 +132,7 @@ export class GenerationsService {
       return
     }
 
-    generation.status = GenerationStatus.IN_PROGRESS
+    generation.progressPercentage = progressPercentage
     await this.generationsRepository.save(generation)
     this.generationsGateway.emitGenerationProgress({
       createdById: generation.createdById,
@@ -207,9 +207,6 @@ export class GenerationsService {
       where: {
         id,
         createdBy: user,
-      },
-      relations: {
-        createdBy: true,
       },
     })
 

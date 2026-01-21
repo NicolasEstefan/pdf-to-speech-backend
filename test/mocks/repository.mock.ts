@@ -3,6 +3,7 @@ export const repositoryMock = () => ({
   save: jest.fn(),
   findOne: jest.fn(),
   findOneBy: jest.fn(),
+  findAndCount: jest.fn(),
   delete: jest.fn(),
   update: jest.fn(),
 })
