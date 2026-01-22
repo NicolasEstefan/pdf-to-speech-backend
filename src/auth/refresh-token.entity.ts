@@ -7,7 +7,7 @@ export class RefreshToken {
   token: string
 
   @Column({ type: 'timestamptz' })
-  expiresAt: string
+  expiresAt: Date
 
   @ManyToOne(() => User, (user) => user.refreshTokens, {
     eager: false,

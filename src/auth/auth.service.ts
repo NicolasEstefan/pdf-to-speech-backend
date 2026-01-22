@@ -69,8 +69,8 @@ export class AuthService {
     )
 
     let newRefreshToken: RefreshToken | undefined = undefined
-    const refreshTokenDuration = Number(
-      this.configService.getOrThrow('REFRESH_TOKEN_DURATION'),
+    const refreshTokenDuration = this.configService.getOrThrow<number>(
+      'REFRESH_TOKEN_DURATION',
     )
     const remainingDuration = dayjs(savedRefreshToken.expiresAt).diff(
       dayjs(),
@@ -101,7 +101,7 @@ export class AuthService {
       token: crypto.randomBytes(64).toString('base64url'),
       expiresAt: dayjs()
         .add(this.configService.getOrThrow('REFRESH_TOKEN_DURATION'), 'seconds')
-        .toISOString(),
+        .toDate(),
       user,
     })
     return refreshToken

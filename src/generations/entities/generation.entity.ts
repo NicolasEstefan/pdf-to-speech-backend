@@ -19,7 +19,7 @@ export class Generation {
   @Column()
   title: string
 
-  @Column()
+  @Column({ type: 'text' })
   status: GenerationStatus
 
   @Column({ default: 0, type: 'float' })

@@ -2,6 +2,7 @@ import z from 'zod'
 
 export const configValidationSchema = z.object({
   NODE_ENV: z.string().default('development'),
+  REDIS_PORT: z.coerce.number(),
   DB_HOST: z.string().nonempty(),
   DB_PORT: z.coerce.number(),
   DB_USERNAME: z.string().nonempty(),
@@ -11,8 +12,8 @@ export const configValidationSchema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().nonempty(),
   SERVER_URL: z.string().nonempty(),
   ACCESS_TOKEN_SECRET: z.string().nonempty(),
-  ACCESS_TOKEN_DURATION: z.string().nonempty(),
-  REFRESH_TOKEN_DURATION: z.string().nonempty(),
+  ACCESS_TOKEN_DURATION: z.coerce.number(),
+  REFRESH_TOKEN_DURATION: z.coerce.number(),
   FRONTEND_URL: z.string().nonempty(),
   PDFS_PATH: z.string().nonempty(),
   TXTS_PATH: z.string().nonempty(),

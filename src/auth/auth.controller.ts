@@ -16,7 +16,6 @@ import { AuthService } from './auth.service'
 import { Profile } from 'passport-google-oauth20'
 import { ConfigService } from '@nestjs/config'
 import { OAuthExceptionFilter } from './oauth-exception.filter'
-import dayjs from 'dayjs'
 
 @Controller('auth')
 @UseFilters(OAuthExceptionFilter)
@@ -92,12 +91,12 @@ export class AuthController {
     res: Response,
     key: string,
     payload: string,
-    expiresAt?: string,
+    expiresAt?: Date,
   ) {
     res.cookie(key, payload, {
       httpOnly: true,
       secure: this.configService.getOrThrow('NODE_ENV') === 'production',
-      expires: expiresAt ? dayjs(expiresAt).toDate() : undefined,
+      expires: expiresAt,
     })
   }
 }

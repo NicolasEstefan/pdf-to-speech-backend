@@ -25,9 +25,7 @@ import { WsAuthService } from './ws-auth.service'
         return {
           secret: configService.getOrThrow('ACCESS_TOKEN_SECRET'),
           signOptions: {
-            expiresIn: Number(
-              configService.getOrThrow('ACCESS_TOKEN_DURATION'),
-            ),
+            expiresIn: configService.getOrThrow('ACCESS_TOKEN_DURATION'),
           },
         }
       },
