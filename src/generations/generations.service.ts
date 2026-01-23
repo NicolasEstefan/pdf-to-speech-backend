@@ -53,10 +53,12 @@ export class GenerationsService {
 
       const title = await this.llmService.generateTitle(pages[0])
 
-      const generation = await this.generationsRepository.createGeneration(
-        user,
+      const generation = await this.generationsRepository.createGeneration({
+        createdBy: user,
         title,
-      )
+        speaker: startGenerationDto.speaker,
+        language: startGenerationDto.language,
+      })
 
       const ttsLanguage = getTtsLanguage(startGenerationDto.language)
 

@@ -5,6 +5,8 @@ import { Generation } from '../../src/generations/entities/generation.entity'
 import dayjs from 'dayjs'
 import { usersFactory } from './users.factory'
 import { User } from '../../src/users/user.entity'
+import { Language } from '../../src/generations/types/language.enum'
+import { Speaker } from '../../src/external-services/tts/types/speaker.enum'
 
 export const generationsFactory = Factory.define<Generation>(({ params }) => {
   const createdBy = (params.createdBy ?? usersFactory.build()) as User
@@ -17,6 +19,8 @@ export const generationsFactory = Factory.define<Generation>(({ params }) => {
     status: GenerationStatus.IN_PROGRESS,
     progressPercentage: 0,
     title: 'generation',
+    language: Language.ENGLISH,
+    speaker: Speaker.ACHERNAR,
     createdAt: dayjs().subtract(2, 'days').toDate(),
     updatedAt: dayjs().subtract(2, 'days').toDate(),
   }

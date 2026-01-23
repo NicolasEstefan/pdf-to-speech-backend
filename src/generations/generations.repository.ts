@@ -1,9 +1,9 @@
 import { DataSource, Repository } from 'typeorm'
 import { Injectable } from '@nestjs/common'
 import { Generation } from './entities/generation.entity'
-import { User } from '../users/user.entity'
 import { GenerationStatus } from './types/generation-status.enum'
 import { Audio } from './entities/audio.entity'
+import { CreateGenerationParams } from './types/create-generation-params.interface'
 
 @Injectable()
 export class GenerationsRepository extends Repository<Generation> {
@@ -11,11 +11,18 @@ export class GenerationsRepository extends Repository<Generation> {
     super(Generation, dataSource.manager)
   }
 
-  async createGeneration(user: User, title: string) {
+  async createGeneration({
+    createdBy,
+    speaker,
+    language,
+    title,
+  }: CreateGenerationParams) {
     const generation = this.create({
-      createdBy: user,
+      createdBy,
       status: GenerationStatus.IN_PROGRESS,
       title,
+      speaker,
+      language,
     })
 
     await this.save(generation)

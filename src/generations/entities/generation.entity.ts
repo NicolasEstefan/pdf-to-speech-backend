@@ -10,6 +10,8 @@ import {
 import { GenerationStatus } from '../types/generation-status.enum'
 import { User } from '../../users/user.entity'
 import { Audio } from './audio.entity'
+import { Language } from '../types/language.enum'
+import { Speaker } from '../../external-services/tts/types/speaker.enum'
 
 @Entity()
 export class Generation {
@@ -19,8 +21,14 @@ export class Generation {
   @Column()
   title: string
 
-  @Column({ type: 'text' })
+  @Column({ type: 'character varying' })
   status: GenerationStatus
+
+  @Column({ type: 'character varying' })
+  language: Language
+
+  @Column({ type: 'character varying' })
+  speaker: Speaker
 
   @Column({ default: 0, type: 'float' })
   progressPercentage: number

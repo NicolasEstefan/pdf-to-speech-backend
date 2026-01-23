@@ -128,10 +128,12 @@ describe('GenerationsService', () => {
         pdfFilePath: MOCK_PDF_PATH,
       })
       expect(generationsRepository.createGeneration).toHaveBeenCalledTimes(1)
-      expect(generationsRepository.createGeneration).toHaveBeenCalledWith(
-        mockUser,
-        MOCK_TITLE,
-      )
+      expect(generationsRepository.createGeneration).toHaveBeenCalledWith({
+        createdBy: mockUser,
+        title: MOCK_TITLE,
+        speaker: MOCK_SPEAKER,
+        language: MOCK_LANGUAGE,
+      })
     })
 
     it('should return the created generation', async () => {
