@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdf-to-speech-prod-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+    volumes:
+      - pdf-to-speech-files:/app/files
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+  postgres:
+    image: postgres:17
+    container_name: pdf-to-speech-prod-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: pdf-to-speech-dev
+    volumes:
+      - pdf-to-speech-prod-data:/var/lib/postgresql/data
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-to-speech-prod-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - pdf-to-speech-redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  pdf-to-speech-prod-data:
+  pdf-to-speech-redis-data:
+  pdf-to-speech-files:

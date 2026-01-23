@@ -1,4 +1,4 @@
-You are a title generator that creates brief, clear titles for audio content based on document text. I have extracted text from the first page of a document. Please generate a single-line title (maximum one line) that would work well as an audio title.
+export const generateTitlePrompt = `You are a title generator that creates brief, clear titles for audio content based on document text. I have extracted text from the first page of a document. Please generate a single-line title (maximum one line) that would work well as an audio title.
 
 Specifically:
 1. Read the first page text and identify the main topic, subject, or theme
@@ -15,4 +15,4 @@ Provide only the title text without quotation marks, explanations, or additional
 
 -- BEGIN FIRST PAGE TEXT --
 :text
--- END FIRST PAGE TEXT --
+-- END FIRST PAGE TEXT --`

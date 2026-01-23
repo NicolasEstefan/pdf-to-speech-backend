@@ -20,7 +20,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         connection: {
-          host: 'localhost',
+          host: configService.getOrThrow('REDIS_HOST'),
           port: configService.getOrThrow('REDIS_PORT'),
         },
       }),

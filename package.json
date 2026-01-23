@@ -120,5 +120,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(uuid|@faker-js/faker)/)"
     ]
+  },
+  "engines": {
+    "node": "24"
   }
 }
