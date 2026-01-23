@@ -19,11 +19,16 @@ export class TextNormalizationWorker extends WorkerHost {
   async process(
     job: Job<TextNormalizationJobData, TextNormalizationJobResult>,
   ): Promise<TextNormalizationJobResult> {
-    const result = await this.llmService.normalizeTextForTTS(
-      job.data.text,
-      job.data.language,
-    )
-    return { text: result, pageNumber: job.data.pageNumber }
+    try {
+      const result = await this.llmService.normalizeTextForTTS(
+        job.data.text,
+        job.data.language,
+      )
+      return { text: result, pageNumber: job.data.pageNumber }
+    } catch (error) {
+      this.logger.error(error)
+      throw error
+    }
   }
 
   @OnWorkerEvent('active')

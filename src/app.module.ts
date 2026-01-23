@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { configValidationSchema } from './config.schema'
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'
@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module'
 import { GenerationsModule } from './generations/generations.module'
 import { ExternalServicesModule } from './external-services/external-services.module'
 import { BullModule } from '@nestjs/bullmq'
+import { LoggerMiddleware } from './middleware/logger.middleware'
 
 @Module({
   imports: [
@@ -53,4 +54,8 @@ import { BullModule } from '@nestjs/bullmq'
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*')
+  }
+}

@@ -23,22 +23,27 @@ export class DownloadWorker extends WorkerHost {
   }
 
   async process(job: Job<DownloadJobData, string>) {
-    await this.generationsService.reportGenerationProgress(
-      job.data.generationId,
-      66.6,
-    )
+    try {
+      await this.generationsService.reportGenerationProgress(
+        job.data.generationId,
+        66.6,
+      )
 
-    const childrenValues = await job.getChildrenValues<string>()
-    const fileName = Object.values(childrenValues)[0]
+      const childrenValues = await job.getChildrenValues<string>()
+      const fileName = Object.values(childrenValues)[0]
 
-    const localFilePath = path.join(
-      this.configService.getOrThrow('AUDIOS_PATH'),
-      fileName,
-    )
-    await this.gcsService.downloadFile(fileName, localFilePath)
-    await this.gcsService.deleteFilesByPrefix(job.data.generationId)
+      const localFilePath = path.join(
+        this.configService.getOrThrow('AUDIOS_PATH'),
+        fileName,
+      )
+      await this.gcsService.downloadFile(fileName, localFilePath)
+      await this.gcsService.deleteFilesByPrefix(job.data.generationId)
 
-    return localFilePath
+      return localFilePath
+    } catch (error) {
+      this.logger.error(error)
+      throw error
+    }
   }
 
   @OnWorkerEvent('active')

@@ -23,38 +23,43 @@ export class GenerationWorker extends WorkerHost {
   async process(job: Job<GenerationJobData, void>) {
     const { generationId, speaker, language } = job.data
 
-    await this.generationsService.reportGenerationProgress(generationId, 33.3)
+    try {
+      await this.generationsService.reportGenerationProgress(generationId, 33.3)
 
-    const childrenResults =
-      await job.getChildrenValues<TextNormalizationJobResult>()
+      const childrenResults =
+        await job.getChildrenValues<TextNormalizationJobResult>()
 
-    const pages = Object.values(childrenResults)
-    pages.sort((a, b) => a.pageNumber - b.pageNumber)
-    const text = pages.map((page) => page.text).join('')
-    let ttsProgress = 0
+      const pages = Object.values(childrenResults)
+      pages.sort((a, b) => a.pageNumber - b.pageNumber)
+      const text = pages.map((page) => page.text).join('')
+      let ttsProgress = 0
 
-    const audioFileName = await this.ttsService.textToSpeech({
-      text,
-      id: generationId,
-      language: language,
-      speaker: speaker,
-      reportProgressCallback: async (progress) => {
-        if (progress === ttsProgress) {
-          return
-        }
+      const audioFileName = await this.ttsService.textToSpeech({
+        text,
+        id: generationId,
+        language: language,
+        speaker: speaker,
+        reportProgressCallback: async (progress) => {
+          if (progress === ttsProgress) {
+            return
+          }
 
-        ttsProgress = progress
+          ttsProgress = progress
 
-        this.logger.verbose(
-          `TTS at ${ttsProgress}% for generation ${generationId}`,
-        )
-        await this.generationsService.reportGenerationProgress(
-          generationId,
-          33.3 + ttsProgress / 3,
-        )
-      },
-    })
-    return audioFileName
+          this.logger.verbose(
+            `TTS at ${ttsProgress}% for generation ${generationId}`,
+          )
+          await this.generationsService.reportGenerationProgress(
+            generationId,
+            33.3 + ttsProgress / 3,
+          )
+        },
+      })
+      return audioFileName
+    } catch (error) {
+      this.logger.error(error)
+      throw error
+    }
   }
 
   @OnWorkerEvent('active')
