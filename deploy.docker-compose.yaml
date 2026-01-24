@@ -24,7 +24,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: pdf-to-speech-dev
     volumes:
       - pdf-to-speech-prod-data:/var/lib/postgresql/data
