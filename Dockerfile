@@ -44,6 +44,7 @@ RUN apk add --no-cache \
   ghostscript \
   tesseract-ocr \
   tesseract-ocr-data-spa \
+  tesseract-ocr-data-eng \
   poppler-utils \
   python3 \
   py3-pip \
