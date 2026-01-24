@@ -58,24 +58,25 @@ RUN apk add --no-cache \
   jbig2enc \
   && pip3 install --no-cache-dir --break-system-packages ocrmypdf
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-  adduser -S nestjs -u 1001
+# Create a non-root user and group
+RUN addgroup -g 1001 -S nestjs && \
+  adduser -S -u 1001 -G nestjs nestjs
 
 # Copy built application from builder stage
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nestjs:nestjs /app/dist ./dist
+COPY --from=prod-deps --chown=nestjs:nestjs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nestjs /app/package.json ./package.json
+COPY --from=builder --chown=nestjs:nestjs /app/key.json ./key.json
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/files /app/files/pdfs /app/files/audios /app/logs && \
-  chown -R nestjs:nodejs /app/files /app/logs
-
-# Switch to non-root user
-USER nestjs
+  chown -R nestjs:nestjs /app
 
 # Set production environment
 ENV NODE_ENV=production
+
+# Switch to non-root user
+USER nestjs
 
 # Expose the application port (adjust if your app uses a different port)
 EXPOSE 3000

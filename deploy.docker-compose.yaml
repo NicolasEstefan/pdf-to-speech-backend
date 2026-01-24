@@ -10,6 +10,7 @@ services:
       - .env.production
     environment:
       NODE_ENV: production
+      GOOGLE_APPLICATION_CREDENTIALS: /app/key.json
     volumes:
       - pdf-to-speech-files:/app/files
     depends_on:
@@ -27,6 +28,7 @@ services:
       POSTGRES_DB: pdf-to-speech-dev
     volumes:
       - pdf-to-speech-prod-data:/var/lib/postgresql/data
+      - pdf-to-speech-logs:/app/logs
     restart: unless-stopped
   redis:
     image: redis:7-alpine
@@ -42,3 +44,4 @@ volumes:
   pdf-to-speech-prod-data:
   pdf-to-speech-redis-data:
   pdf-to-speech-files:
+  pdf-to-speech-logs:
