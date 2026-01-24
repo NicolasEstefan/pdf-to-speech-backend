@@ -23,8 +23,6 @@ COPY . .
 # Build the application
 RUN npm run build
 
-RUN cp -r src/external-services/llm/prompts dist/external-services/llm
-
 # Stage 2.5: Production Dependencies
 FROM node:24-alpine AS prod-deps
 
@@ -66,10 +64,9 @@ RUN addgroup -g 1001 -S nestjs && \
 COPY --from=builder --chown=nestjs:nestjs /app/dist ./dist
 COPY --from=prod-deps --chown=nestjs:nestjs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nestjs /app/package.json ./package.json
-COPY --from=builder --chown=nestjs:nestjs /app/key.json ./key.json
 
 # Create necessary directories with proper permissions
-RUN mkdir -p /app/files /app/files/pdfs /app/files/audios /app/logs && \
+RUN mkdir -p /app/files/pdfs /app/files/audios /app/logs && \
   chown -R nestjs:nestjs /app
 
 # Set production environment
