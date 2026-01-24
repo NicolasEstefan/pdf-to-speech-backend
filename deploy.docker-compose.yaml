@@ -28,7 +28,7 @@ services:
       POSTGRES_DB: pdf-to-speech-prod
     volumes:
       - pdf-to-speech-prod-data:/var/lib/postgresql/data
-      - pdf-to-speech-logs:/app/logs
+      - ./logs/app/logs
     restart: unless-stopped
   redis:
     image: redis:7-alpine
@@ -44,4 +44,3 @@ volumes:
   pdf-to-speech-prod-data:
   pdf-to-speech-redis-data:
   pdf-to-speech-files:
-  pdf-to-speech-logs:
