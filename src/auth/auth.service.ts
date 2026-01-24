@@ -28,11 +28,7 @@ export class AuthService implements OnModuleInit {
     const whitelistFilePath = this.configService.getOrThrow<string>(
       'EMAILS_WHITELIST_FILE_PATH',
     )
-    let whitelist = (await readFile(whitelistFilePath)).toString()
-    if (whitelist.length > 0 && whitelist[whitelist.length - 1] === '\n') {
-      whitelist = whitelist.slice(0, whitelist.length - 1)
-    }
-
+    const whitelist = (await readFile(whitelistFilePath)).toString().trim()
     this.emailsWhitelist = whitelist.split('\n')
   }
 
