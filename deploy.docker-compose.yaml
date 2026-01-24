@@ -25,7 +25,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: pdf-to-speech-dev
+      POSTGRES_DB: pdf-to-speech-prod
     volumes:
       - pdf-to-speech-prod-data:/var/lib/postgresql/data
       - pdf-to-speech-logs:/app/logs
