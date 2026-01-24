@@ -26,4 +26,5 @@ export const configValidationSchema = z.object({
   GCLOUD_TTS_PROGRESS_CHECK_URL: z.string().nonempty(),
   TTS_PROGRESS_REPORT_INTERVAL: z.coerce.number().default(5000),
   TTS_MAX_WAIT: z.coerce.number().default(2 * 60 * 60), // 2 hs default
+  EMAILS_WHITELIST_FILE_PATH: z.string().nonempty(),
 })

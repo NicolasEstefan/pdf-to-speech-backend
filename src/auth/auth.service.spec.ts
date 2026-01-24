@@ -17,6 +17,7 @@ import { refreshTokensFactory } from '../../test/factories/refresh-tokens.factor
 import { UnauthorizedException } from '@nestjs/common'
 import { FindOneOptions } from 'typeorm'
 import { RefreshTokensRepository } from './refresh-tokens.repository'
+import { readFile } from 'node:fs/promises'
 
 const usersServiceMock = () => ({
   findByGoogleId: jest.fn(),
@@ -32,7 +33,9 @@ const refreshTokensRepositoryMock = () => ({
   replaceRefreshToken: jest.fn(),
 })
 
-const MOCK_REFRESH_TOKEN_DURATION = 604800 // one week in seconds
+jest.mock('node:fs/promises', () => ({
+  readFile: jest.fn(),
+}))
 
 describe('AuthService', () => {
   let authService: AuthService
@@ -40,6 +43,10 @@ describe('AuthService', () => {
   let usersService: ReturnType<typeof usersServiceMock>
   let jwtService: ReturnType<typeof jwtServiceMock>
   let refreshTokensRepository: ReturnType<typeof refreshTokensRepositoryMock>
+  let readFileMock: jest.Mock
+
+  const MOCK_REFRESH_TOKEN_DURATION = 604800 // one week in seconds
+  const MOCK_EMAIL = faker.internet.email()
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +72,11 @@ describe('AuthService', () => {
     }).compile()
 
     configService = module.get(ConfigService)
+    readFileMock = readFile as jest.Mock
+    readFileMock.mockResolvedValue(MOCK_EMAIL)
+
+    await module.init()
+
     usersService = module.get(UsersService)
     jwtService = module.get(JwtService)
     refreshTokensRepository = module.get(RefreshTokensRepository)
@@ -86,8 +98,10 @@ describe('AuthService', () => {
 
     beforeEach(() => {
       mockAccessToken = faker.internet.jwt()
-      mockUser = usersFactory.build()
-      mockProfile = profilesFactory.build()
+      mockUser = usersFactory.build({ email: MOCK_EMAIL })
+      mockProfile = profilesFactory.build({
+        emails: [{ value: MOCK_EMAIL, verified: true }],
+      })
       mockRefreshToken = refreshTokensFactory.build({ user: mockUser })
 
       refreshTokensRepository.create.mockReturnValue(mockRefreshToken)
@@ -206,6 +220,18 @@ describe('AuthService', () => {
         expect(usersService.create).not.toHaveBeenCalled()
       })
     })
+
+    describe('when the user is not in the whitelist', () => {
+      beforeEach(() => {
+        mockProfile.emails = [{ value: faker.internet.email(), verified: true }]
+      })
+
+      it('should throw an UnauthorizedException', async () => {
+        await expect(authService.signInWithGoogle(mockProfile)).rejects.toThrow(
+          UnauthorizedException,
+        )
+      })
+    })
   })
 
   describe('refreshTokens', () => {
@@ -217,9 +243,7 @@ describe('AuthService', () => {
       mockUser = usersFactory.build()
       mockRefreshToken = refreshTokensFactory.build({
         user: mockUser,
-        expiresAt: dayjs()
-          .add(MOCK_REFRESH_TOKEN_DURATION, 'seconds')
-          .toISOString(),
+        expiresAt: dayjs().add(MOCK_REFRESH_TOKEN_DURATION, 'seconds').toDate(),
       })
       mockAccessToken = faker.internet.jwt()
       refreshTokensRepository.findOne.mockReturnValue(mockRefreshToken)
@@ -280,7 +304,7 @@ describe('AuthService', () => {
 
     describe('when refresh token is expired', () => {
       beforeEach(() => {
-        mockRefreshToken.expiresAt = dayjs().subtract(1, 'day').toISOString()
+        mockRefreshToken.expiresAt = dayjs().subtract(1, 'day').toDate()
       })
 
       it('should throw UnauthorizedException', async () => {
@@ -306,12 +330,12 @@ describe('AuthService', () => {
       beforeEach(() => {
         mockRefreshToken.expiresAt = dayjs()
           .add(MOCK_REFRESH_TOKEN_DURATION / 2 - 1, 'seconds')
-          .toISOString()
+          .toDate()
         mockNewRefreshToken = refreshTokensFactory.build({
           user: mockUser,
           expiresAt: dayjs()
             .add(MOCK_REFRESH_TOKEN_DURATION, 'seconds')
-            .toISOString(),
+            .toDate(),
         })
         refreshTokensRepository.create.mockReturnValue(mockNewRefreshToken)
       })

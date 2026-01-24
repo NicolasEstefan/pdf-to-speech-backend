@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import { usersFactory } from './users.factory'
 
 export const refreshTokensFactory = Factory.define<RefreshToken>(() => ({
-  expiresAt: dayjs().add(7, 'days').toISOString(),
+  expiresAt: dayjs().add(7, 'days').toDate(),
   token: faker.string.alpha(64),
   user: usersFactory.build(),
 }))

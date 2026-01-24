@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common'
 import { Profile } from 'passport-google-oauth20'
 import crypto from 'crypto'
 import { LoginResult } from './types/login-result.interface'
@@ -11,9 +11,12 @@ import { JwtService } from '@nestjs/jwt'
 import { JwtPayload } from './types/jwt-payload.interface'
 import { RefreshTokenResult } from './types/refresh-token-result.interface'
 import { RefreshTokensRepository } from './refresh-tokens.repository'
+import { readFile } from 'node:fs/promises'
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  private emailsWhitelist: string[]
+
   constructor(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
@@ -21,8 +24,24 @@ export class AuthService {
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
+  async onModuleInit() {
+    const whitelistFilePath = this.configService.getOrThrow<string>(
+      'EMAILS_WHITELIST_FILE_PATH',
+    )
+    let whitelist = (await readFile(whitelistFilePath)).toString()
+    if (whitelist.length > 0 && whitelist[whitelist.length - 1] === '\n') {
+      whitelist = whitelist.slice(0, whitelist.length - 1)
+    }
+
+    this.emailsWhitelist = whitelist.split('\n')
+  }
+
   async signInWithGoogle(profile: Profile): Promise<LoginResult> {
-    if (!profile.emails || profile.emails.length < 1) {
+    if (
+      !profile.emails ||
+      profile.emails.length < 1 ||
+      !this.emailsWhitelist.includes(profile.emails[0].value)
+    ) {
       throw new UnauthorizedException()
     }
 

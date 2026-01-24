@@ -11,6 +11,7 @@ services:
       - pdf-to-speech-files:/app/files
       - pdf-to-speech-logs:/app/logs
       - ./key.json:/app/key.json
+      - ./emails-whitelist.txt:/app/emails-whitelist.txt
     depends_on:
       - postgres
       - redis
