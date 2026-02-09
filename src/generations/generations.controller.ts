@@ -47,7 +47,7 @@ export class GenerationsController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 15 * 1000 * 1000 * 1000 }),
+          new MaxFileSizeValidator({ maxSize: 15 * 1000 * 1000 }),
           new FileTypeValidator({ fileType: 'application/pdf' }),
         ],
       }),
