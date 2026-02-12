@@ -6,7 +6,7 @@ import { Logger } from '@nestjs/common'
 import { TextNormalizationJobResult } from '../types/text-normalization-job-result.interface'
 import { TEXT_NORMALIZATION_QUEUE } from '../generations.constants'
 
-@Processor(TEXT_NORMALIZATION_QUEUE, { concurrency: 30 })
+@Processor(TEXT_NORMALIZATION_QUEUE, { concurrency: 10 })
 export class TextNormalizationWorker extends WorkerHost {
   private readonly logger: Logger = new Logger(TextNormalizationWorker.name, {
     timestamp: true,
