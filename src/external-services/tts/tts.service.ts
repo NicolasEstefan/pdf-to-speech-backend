@@ -84,7 +84,7 @@ export class TtsService {
       )
 
       if (progressCheckResponse.data.error) {
-        this.logger.error(progressCheckResponse.data)
+        this.logger.error(JSON.stringify(progressCheckResponse.data))
         throw new TtsFailedException(progressCheckResponse.data.error)
       }
 

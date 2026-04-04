@@ -97,8 +97,12 @@ export class GenerationsService {
             name: GENERATE_STEP,
             queueName: GENERATION_QUEUE,
             opts: {
-              attempts: 2,
+              attempts: 10,
               failParentOnFailure: true,
+              backoff: {
+                type: 'exponential',
+                delay: 1000,
+              },
             },
             data: generationJobData,
             children: textNormalizationJobsData.map((data) => ({
