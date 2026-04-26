@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config'
 import OpenAI from 'openai'
 import { Language } from '../../generations/types/language.enum'
 import { normalizeTextPrompt } from './prompts/normalize-text-prompt'
-import { generateTitlePrompt } from './prompts/generate-title'
 
 @Injectable()
 export class LlmService {
@@ -20,15 +19,6 @@ export class LlmService {
 
     const response = await this.client.responses.create({
       input: prompt.replace(':text', text),
-      model: this.configService.getOrThrow('LLM_MODEL'),
-    })
-
-    return response.output_text
-  }
-
-  async generateTitle(text: string): Promise<string> {
-    const response = await this.client.responses.create({
-      input: generateTitlePrompt.replace(':text', text),
       model: this.configService.getOrThrow('LLM_MODEL'),
     })
 

@@ -25,18 +25,12 @@ import { TextNormalizationJobData } from './types/text-normalization-job-data.in
 import { rm, stat } from 'fs/promises'
 import { GenerationStatus } from './types/generation-status.enum'
 import { GenerationsGateway } from './generations.gateway'
-import { LlmService } from '../external-services/llm/llm.service'
-
 const flowProducerMock = () => ({
   add: jest.fn(),
 })
 
 const pdfServiceMock = () => ({
   extractTextFromPages: jest.fn(),
-})
-
-const llmServiceMock = () => ({
-  generateTitle: jest.fn(),
 })
 
 jest.mock('node:fs/promises', () => ({
@@ -59,7 +53,6 @@ describe('GenerationsService', () => {
   let pdfService: ReturnType<typeof pdfServiceMock>
   let generationsFlowProducer: ReturnType<typeof flowProducerMock>
   let generationsRepository: ReturnType<typeof generationsRepositoryMock>
-  let llmService: ReturnType<typeof llmServiceMock>
   let generationsGateway: ReturnType<typeof generationsGatewayMock>
 
   beforeEach(async () => {
@@ -84,10 +77,6 @@ describe('GenerationsService', () => {
           provide: GenerationsGateway,
           useFactory: generationsGatewayMock,
         },
-        {
-          provide: LlmService,
-          useFactory: llmServiceMock,
-        },
       ],
     }).compile()
 
@@ -96,7 +85,6 @@ describe('GenerationsService', () => {
     )
     pdfService = module.get(PdfService)
     generationsRepository = module.get(GenerationsRepository)
-    llmService = module.get(LlmService)
     generationsGateway = module.get(GenerationsGateway)
 
     generationsService = module.get<GenerationsService>(GenerationsService)
@@ -105,10 +93,11 @@ describe('GenerationsService', () => {
   describe('startGeneration', () => {
     const MOCK_PAGES = ['this', 'is', 'a', 'test']
     const MOCK_PDF_PATH = 'files/pdfs/test.pdf'
+    const MOCK_ORIGINAL_FILE_NAME = 'my-document test.pdf'
     const MOCK_LANGUAGE = Language.ENGLISH
     const MOCK_TTS_LANGUAGE = TtsLanguage.EN_US
     const MOCK_SPEAKER = Speaker.ACHERNAR
-    const MOCK_TITLE = 'This is a test title'
+    const EXPECTED_TITLE = 'mydocument test'
     let mockUser: User
     let mockGeneration: Generation
 
@@ -118,7 +107,6 @@ describe('GenerationsService', () => {
 
       pdfService.extractTextFromPages.mockResolvedValue(MOCK_PAGES)
       generationsRepository.createGeneration.mockResolvedValue(mockGeneration)
-      llmService.generateTitle.mockResolvedValue(MOCK_TITLE)
     })
 
     it('should call the GenerationsRepository.createGeneration with the correct params', async () => {
@@ -126,11 +114,12 @@ describe('GenerationsService', () => {
         language: MOCK_LANGUAGE,
         speaker: MOCK_SPEAKER,
         pdfFilePath: MOCK_PDF_PATH,
+        originalFileName: MOCK_ORIGINAL_FILE_NAME,
       })
       expect(generationsRepository.createGeneration).toHaveBeenCalledTimes(1)
       expect(generationsRepository.createGeneration).toHaveBeenCalledWith({
         createdBy: mockUser,
-        title: MOCK_TITLE,
+        title: EXPECTED_TITLE,
         speaker: MOCK_SPEAKER,
         language: MOCK_LANGUAGE,
       })
@@ -141,6 +130,7 @@ describe('GenerationsService', () => {
         language: MOCK_LANGUAGE,
         speaker: MOCK_SPEAKER,
         pdfFilePath: MOCK_PDF_PATH,
+        originalFileName: MOCK_ORIGINAL_FILE_NAME,
       })
 
       expect(result).toEqual(mockGeneration)
@@ -169,6 +159,7 @@ describe('GenerationsService', () => {
         language: MOCK_LANGUAGE,
         speaker: MOCK_SPEAKER,
         pdfFilePath: MOCK_PDF_PATH,
+        originalFileName: MOCK_ORIGINAL_FILE_NAME,
       })
 
       expect(generationsFlowProducer.add).toHaveBeenCalledTimes(1)
@@ -188,8 +179,12 @@ describe('GenerationsService', () => {
             name: GENERATE_STEP,
             queueName: GENERATION_QUEUE,
             opts: {
-              attempts: 2,
+              attempts: 10,
               failParentOnFailure: true,
+              backoff: {
+                type: 'exponential',
+                delay: 1000,
+              },
             },
             data: generationJobData,
             children: textNormalizationJobsData.map((data) => ({
@@ -211,6 +206,7 @@ describe('GenerationsService', () => {
         language: MOCK_LANGUAGE,
         speaker: MOCK_SPEAKER,
         pdfFilePath: MOCK_PDF_PATH,
+        originalFileName: MOCK_ORIGINAL_FILE_NAME,
       })
 
       expect(rm).toHaveBeenCalledTimes(1)
@@ -231,6 +227,7 @@ describe('GenerationsService', () => {
             language: MOCK_LANGUAGE,
             speaker: MOCK_SPEAKER,
             pdfFilePath: MOCK_PDF_PATH,
+            originalFileName: MOCK_ORIGINAL_FILE_NAME,
           }),
         ).rejects.toThrow(error)
       })
@@ -241,6 +238,7 @@ describe('GenerationsService', () => {
             language: MOCK_LANGUAGE,
             speaker: MOCK_SPEAKER,
             pdfFilePath: MOCK_PDF_PATH,
+            originalFileName: MOCK_ORIGINAL_FILE_NAME,
           })
 
           fail('should have thrown')
