@@ -1,6 +1,7 @@
 import { InjectFlowProducer } from '@nestjs/bullmq'
 import { Injectable, Logger } from '@nestjs/common'
 import { FlowProducer } from 'bullmq'
+import { basename, extname } from 'node:path'
 import { StartGenerationParams } from './types/start-generation-params.interface'
 import { rm, stat } from 'node:fs/promises'
 import { PdfService } from './pdf/pdf.service'
@@ -24,7 +25,6 @@ import { getPdfLanguage, getTtsLanguage } from './language-converter'
 import { PaginatedResult } from '../types/paginated-result'
 import { GetGenerationsDto } from './dto/get-generations.dto'
 import { GenerationsGateway } from './generations.gateway'
-import { LlmService } from '../external-services/llm/llm.service'
 
 @Injectable()
 export class GenerationsService {
@@ -38,7 +38,6 @@ export class GenerationsService {
     private readonly pdfService: PdfService,
     private readonly generationsRepository: GenerationsRepository,
     private readonly generationsGateway: GenerationsGateway,
-    private readonly llmService: LlmService,
   ) {}
 
   async startGeneration(
@@ -51,7 +50,9 @@ export class GenerationsService {
         getPdfLanguage(startGenerationDto.language),
       )
 
-      const title = await this.llmService.generateTitle(pages[0])
+      const title = this.getTitleFromFileName(
+        startGenerationDto.originalFileName,
+      )
 
       const generation = await this.generationsRepository.createGeneration({
         createdBy: user,
@@ -206,6 +207,12 @@ export class GenerationsService {
       totalPages: Math.ceil(total / pageSize),
       data: generations,
     }
+  }
+
+  private getTitleFromFileName(fileName: string): string {
+    return basename(fileName, extname(fileName))
+      .replace(/[^a-zA-Z0-9 ]/g, '')
+      .trim()
   }
 
   async getGenerationById(user: User, id: string): Promise<Generation | null> {

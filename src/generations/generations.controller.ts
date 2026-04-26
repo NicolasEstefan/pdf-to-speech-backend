@@ -67,6 +67,7 @@ export class GenerationsController {
       language: startGenerationDto.language,
       speaker: startGenerationDto.speaker,
       pdfFilePath: tempFilePath,
+      originalFileName: file.originalname,
     })
   }
 
