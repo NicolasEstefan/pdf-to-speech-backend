@@ -4,7 +4,7 @@
 
 ## Description
 
-This is the backend for PDF2Speech, a system that turns PDF documents into audiobooks. It was built to apply and deepen knowledge of NestJS and React + Redux (see the [frontend repo](https://github.com/NicolasEstefan/pdf-to-speech-frontend)), and along the way to get hands-on experience with Google Cloud services: OAuth Consent Screen, Text-to-Speech API, and Cloud Storage.
+This is the backend for PDF2Speech, a system that turns PDF documents into audiobooks.
 
 ## Features
 
