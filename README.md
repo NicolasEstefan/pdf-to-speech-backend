@@ -1,4 +1,4 @@
-<h1 align="center">PDF2Speech</h1>
+<h1 align="center">📄 PDF2Speech 🔊</h1>
 
 <p align="center">A NestJS backend that converts PDF documents into high-quality audio.</p>
 
